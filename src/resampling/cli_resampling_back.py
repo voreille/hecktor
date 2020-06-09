@@ -12,11 +12,13 @@ from src.resampling.resampling import Resampler
 @click.command()
 @click.argument('input_folder',
                 type=click.Path(exists=True),
-                default='data/processed')
-@click.argument('output_folder', type=click.Path(), default='data/results')
+                default='data/segmentation_output_renamed')
+@click.argument('output_folder',
+                type=click.Path(),
+                default='data/segmentation_output_tosubmit')
 @click.argument('bounding_boxes_file',
                 type=click.Path(),
-                default='data/bb.csv')
+                default='data/bbox.csv')
 @click.argument('original_resolution_file',
                 type=click.Path(),
                 default='data/original_resolution.csv')

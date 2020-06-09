@@ -8,7 +8,8 @@ import pandas as pd
 
 from src.resampling.resampling import Resampler
 
-path_in = 'data/processed'
+# Default paths
+path_in = 'data/hecktor_nii/'
 path_out = 'data/resampled/'
 path_bb = 'data/bbox.csv'
 
