@@ -14,17 +14,21 @@ import SimpleITK as sitk
                 default='data/processed')
 @click.argument('output_file',
                 type=click.Path(),
-                default='data/original_resolution_ct.csv')
-@click.option('--extension', type=click.STRING, default='.nii.gz')
+                default='data/original_resolution.csv')
+@click.option('--extension',
+              type=click.STRING,
+              default='.nii.gz',
+              help='The extension of the file to look for in INPUT_FOLDER.')
 def main(input_folder, output_file, extension):
-    """Command Line Inteface used to generate a csv file containing the
-       original voxel spacing.
+    """ This command line interface allows to generate the file
+        ORIGINAL_RESOLUTION_FILE used to resample the predicted segmentation
+        back to the original resolution (the CT's native resolution).
+        This file is used with the CLI src/resampling/cli_resampling_back.py.
 
-    Args:
-        input_folder (str): Path containing the NIFTI images in the original
-                            resolution.
-        output_file (str): Path where to store the csv.
-        extension (str): String containing the extension of the NIFTI files ('.nii' or '.nii.gz')
+        INPUT_FOLDER is the path of the folder containing the NIFTI
+        in the original resolution (the one downloaded on AIcrowd.)
+        OUTPUT_FILE is the path where the file will be stored
+        (default=data/original_resolution.csv).
     """
 
     resolution_dict = pd.DataFrame(

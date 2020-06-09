@@ -8,13 +8,9 @@ import pandas as pd
 
 from src.resampling.resampling import Resampler
 
-path_in = '/mnt/nas4/datasets/ToReadme/HECKTOR/hecktor_nii/'
-# path_out = 'data/resampled_debugg/'
-path_bb = '/mnt/nas4/datasets/ToReadme/HECKTOR/bbox.csv'
-
-# path_in = 'data/processed'
+path_in = 'data/processed'
 path_out = 'data/resampled/'
-# path_bb = 'data/bb.csv'
+path_bb = 'data/bbox.csv'
 
 
 @click.command()
@@ -41,12 +37,13 @@ path_out = 'data/resampled/'
               help='The order of the spline interpolation used to resample')
 def main(input_folder, output_folder, bounding_boxes_file, cores, resampling,
          order):
-    """ This command line interface allows to resample .nii files within a
-        given bounding box. The images are resampled with spline interpolation
-        of degree --order and the segmentation are resampled by nearest
-        neighbor interpolation.
+    """ This command line interface allows to resample NIFTI files within a
+        given bounding box contain in BOUNDING_BOXES_FILE. The images are
+        resampled with spline interpolation
+        of degree --order (default=3) and the segmentation are resampled
+        by nearest neighbor interpolation.
 
-        INPUT_FOLDER is the path of the folder containing the .nii to
+        INPUT_FOLDER is the path of the folder containing the NIFTI to
         resample.
         OUTPUT_FOLDER is the path of the folder where to store the
         resampled NIFTI files.
