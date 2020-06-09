@@ -17,7 +17,7 @@ a python3 virtual environment.
 
 Resample Data
 ------------
-Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/cli_resampling.py --help`).
+Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/cli_resampling.py --help` for more informations).
 
 Train a CNN
 ------------
@@ -31,8 +31,10 @@ A renaming function should be used to comply with the format needed for the test
 Evaluate Results
 ------------
 An example of how the evaluation will be computed is illustrated in the notebook `notebooks/evaluate_predictions.ipynb`.
-For the submission of the test results, you will need to resample back to the original resolution. 
-This is also implemented in this ipynb prior to evaluation and can be used with niftynet output or other algorithms' outputs.
+For the submission of the test results, you will need to resample back to the original CT resolution. 
+This is implemented in this ipynb prior to evaluation and can be used with niftynet output or other algorithms' outputs.
+Alternatively, run `python src/resampling/cli_get_resolution.py` followed by `python src/resampling/cli_resampling_back.py`
+to resample your results back to the original CT resolution. (For more information `python src/resampling/cli_resampling_back.py --help`)
 
 Project Organization
 ------------
