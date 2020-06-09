@@ -9,9 +9,15 @@ Download Data
 To access the data, visit the challenge website: https://www.aicrowd.com/challenges/hecktor and follow the instructions.
 The code included here was intended to work with a specific repository structure described in Section Project Organization. 
 
+Install Dependencies
+------------
+To install the necessary dependencies you can use `pip install -r requirements.txt`. It is advised to use it within
+a python3 virtual environment.
+
+
 Resample Data
 ------------
-Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (see documentation of src/resamping/cli_resampling.py).
+Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/cli_resampling.py --help`).
 
 Train a CNN
 ------------
