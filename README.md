@@ -7,7 +7,8 @@ Tools to preprocess the data of the HECKTOR challenge and run a baseline CNN seg
 Download Data
 ------------
 To access the data, visit the challenge website: https://www.aicrowd.com/challenges/hecktor and follow the instructions.
-The code included here was intended to work with a specific repository structure described in Section Project Organization. 
+The code included here was intended to work with a specific repository structure described in Section Project Organization.
+Following `git clone https://github.com/voreille/hecktor.git`, create a `data/` folder in the repository and place the unzipped data in it.
 
 Install Dependencies
 ------------
@@ -40,8 +41,8 @@ Project Organization
 ------------
 
     ├── README.md                     
-    ├── data
-    │   ├── resampled                  <- The data in the nifty resampled and cropped according to the bounding boxes (bb.csv).
+    ├── data                           <- NOT in the version control.
+    │   ├── resampled                  <- The data in the nifty resampled and cropped according to the bounding boxes (bbox.csv).
     │   ├── hecktor_nii                <- The data converted in the nifty format with the original geometric frame
     │   └── bbox.csv                   <- The bounding box for each patient computed with AUTO_CROP_FUNC
     ├── requirements.txt               <- The requirements file for reproducing the analysis environment, e.g.
