@@ -40,9 +40,8 @@ Project Organization
     ├── README.md                     
     ├── data
     │   ├── resampled                  <- The data in the nifty resampled and cropped according to the bounding boxes (bb.csv).
-    │   ├── processed                  <- The data converted in the nifty format with the original geometric frame
-    │   ├── raw                        <- The original dicom data
-    │   └── bb.csv                     <- The bounding box for each patient computed with AUTO_CROP_FUNC
+    │   ├── hecktor_nii                <- The data converted in the nifty format with the original geometric frame
+    │   └── bbox.csv                   <- The bounding box for each patient computed with AUTO_CROP_FUNC
     ├── requirements.txt               <- The requirements file for reproducing the analysis environment, e.g.
     │                                    generated with `pip freeze > requirements.txt`
     ├── Makefile                       <- Used to do set up the environment and make the conversion of DICOM to NIFTI.
@@ -50,8 +49,8 @@ Project Organization
     │   ├── crop_dataset.ipynb
     │   └── evaluate_predictions.ipynb <- Example of how the evalution will be computed. This example use the output of the NiftyNet model.
     └── src                            <- Source code for use in this project.
+        ├── data                       <- Scripts to download or generate data
         │   ├── __init__.py
-        │   ├── data                   <- Scripts to download or generate data
         │   ├── bounding_box.py
         │   ├── dicom_conversion.py
         │   └── make_dataset.py
@@ -62,9 +61,7 @@ Project Organization
         ├── niftynet
         │   ├── __init__.py
         │   ├── config2D.ini
-        │   ├── config2D_vin.ini
         │   ├── config3D.ini
-        │   ├── config3D_vin.ini
         │   ├── dataset_split.csv
         │   └── rename_output.py
         ├── resampling
