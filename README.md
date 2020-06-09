@@ -15,11 +15,12 @@ Run `python src/resampling/cli_resampling.py` to crop and resample the data foll
 
 Train a CNN
 ------------
+Use cuda-10 for GPU usage.
 `cd src/niftynet` and run `net_segment train -c config3D.ini` for training, followed by
 `net_segment inference -c config3D.ini` for inference and `net_segment evaluation -c config3D.ini` for evaluation. 
 A random 90%-10% split is used for training and testing. 
 Note that the HECKTOR test data will come from a center different from the four training centers, you may want to evaluate your generalization across centers.
-A renaming function should be used to comply with the format needed for the test evaluation; run `python rename_output.py`.
+A renaming function should be used to comply with the format needed for the test evaluation; run `python rename_output.py` to create a folder with correct file names.
 
 Evaluate Results
 ------------
