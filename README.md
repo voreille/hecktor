@@ -11,17 +11,21 @@ The code included here was intended to work with a specific repository structure
 
 Resample Data
 ------------
-Run `python src/resamping/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (see documentation of src/resamping/cli_resampling.py).
+Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (see documentation of src/resamping/cli_resampling.py).
 
 Train a CNN
 ------------
-`cd src/niftynet` and run `net_segment train -c config3D.ini` for training,
-`net_segment inference -c config3D.ini` for inference and `net_segment evaluation -c config3D.ini` for evaluation.
+`cd src/niftynet` and run `net_segment train -c config3D.ini` for training, followed by
+`net_segment inference -c config3D.ini` for inference and `net_segment evaluation -c config3D.ini` for evaluation. 
+A random 90%-10% split is used for training and testing. 
+Note that the HECKTOR test data will come from a center different from the four training centers, you may want to evaluate your generalization across centers.
+A renaming function should be used to comply with the format needed for the test evaluation; run `python rename_output.py`.
 
 Evaluate Results
 ------------
 An example of how the evaluation will be computed is illustrated in the notebook `notebooks/evaluate_predictions.ipynb`.
-
+For the submission of the test results, you will need to resample back to the original resolution. 
+This is also implemented in this ipynb prior to evaluation and can be used with niftynet output or other algorithms' outputs.
 
 Project Organization
 ------------
