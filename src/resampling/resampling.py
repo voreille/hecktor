@@ -55,7 +55,7 @@ def resample_and_crop(input_file,
     np_volume, pixel_spacing, origin = get_np_volume_from_sitk(
         sitk.ReadImage(input_file))
     resampling = np.asarray(resampling)
-    # If one value of resampling is negative replace it with the original value
+    # If one value of resampling is -1 replace it with the original value
     for i in range(len(resampling)):
         if resampling[i] == -1:
             resampling[i] = pixel_spacing[i]
