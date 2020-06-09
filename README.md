@@ -9,9 +9,15 @@ Download Data
 To access the data, visit the challenge website: https://www.aicrowd.com/challenges/hecktor and follow the instructions.
 The code included here was intended to work with a specific repository structure described in Section Project Organization. 
 
+Install Dependencies
+------------
+To install the necessary dependencies you can use `pip install -r requirements.txt`. It is advised to use it within
+a python3 virtual environment.
+
+
 Resample Data
 ------------
-Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (see documentation of src/resamping/cli_resampling.py).
+Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/cli_resampling.py --help` for more informations).
 
 Train a CNN
 ------------
@@ -25,8 +31,10 @@ A renaming function should be used to comply with the format needed for the test
 Evaluate Results
 ------------
 An example of how the evaluation will be computed is illustrated in the notebook `notebooks/evaluate_predictions.ipynb`.
-For the submission of the test results, you will need to resample back to the original resolution. 
-This is also implemented in this ipynb prior to evaluation and can be used with niftynet output or other algorithms' outputs.
+For the submission of the test results, you will need to resample back to the original CT resolution. 
+This is implemented in this ipynb prior to evaluation and can be used with niftynet output or other algorithms' outputs.
+Alternatively, run `python src/resampling/cli_get_resolution.py` followed by `python src/resampling/cli_resampling_back.py`
+to resample your results back to the original CT resolution. (For more information `python src/resampling/cli_resampling_back.py --help`)
 
 Project Organization
 ------------
@@ -34,9 +42,8 @@ Project Organization
     ├── README.md                     
     ├── data
     │   ├── resampled                  <- The data in the nifty resampled and cropped according to the bounding boxes (bb.csv).
-    │   ├── processed                  <- The data converted in the nifty format with the original geometric frame
-    │   ├── raw                        <- The original dicom data
-    │   └── bb.csv                     <- The bounding box for each patient computed with AUTO_CROP_FUNC
+    │   ├── hecktor_nii                <- The data converted in the nifty format with the original geometric frame
+    │   └── bbox.csv                   <- The bounding box for each patient computed with AUTO_CROP_FUNC
     ├── requirements.txt               <- The requirements file for reproducing the analysis environment, e.g.
     │                                    generated with `pip freeze > requirements.txt`
     ├── Makefile                       <- Used to do set up the environment and make the conversion of DICOM to NIFTI.
@@ -44,8 +51,8 @@ Project Organization
     │   ├── crop_dataset.ipynb
     │   └── evaluate_predictions.ipynb <- Example of how the evalution will be computed. This example use the output of the NiftyNet model.
     └── src                            <- Source code for use in this project.
+        ├── data                       <- Scripts to download or generate data
         │   ├── __init__.py
-        │   ├── data                   <- Scripts to download or generate data
         │   ├── bounding_box.py
         │   ├── dicom_conversion.py
         │   └── make_dataset.py
@@ -56,9 +63,7 @@ Project Organization
         ├── niftynet
         │   ├── __init__.py
         │   ├── config2D.ini
-        │   ├── config2D_vin.ini
         │   ├── config3D.ini
-        │   ├── config3D_vin.ini
         │   ├── dataset_split.csv
         │   └── rename_output.py
         ├── resampling

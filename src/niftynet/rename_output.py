@@ -5,7 +5,7 @@ from shutil import copyfile
 import click
 
 path_in = '../../data/segmentation_output'
-path_out = '../../data/segmentation_output_rename'
+path_out = '../../data/segmentation_output_renamed'
 
 
 @click.command()
