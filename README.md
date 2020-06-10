@@ -37,7 +37,7 @@ This is implemented in this ipynb prior to evaluation and can be used with Nifty
 Alternatively, run `python src/resampling/cli_get_resolution.py` followed by `python src/resampling/cli_resampling_back.py`
 to resample your results back to the original CT resolution. (For more information `python src/resampling/cli_resampling_back.py --help`)
 
-Project OrganizatioN
+Project Organization
 ------------
 
     ├── README.md                     
