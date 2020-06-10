@@ -50,7 +50,7 @@ Project Organization
     ├── Makefile                       <- Used to do set up the environment and make the conversion of DICOM to NIFTI.
     ├── notebooks
     │   ├── crop_dataset.ipynb
-    │   └── evaluate_predictions.ipynb <- Example of how the evalution will be computed. This example use the output of the NiftyNet model.
+    │   └── evaluate_predictions.ipynb <- Example of how the evaluation will be computed. This example use the output of the NiftyNet model.
     └── src                            <- Source code for use in this project.
         ├── data                       <- Scripts to download or generate data
         │   ├── __init__.py
