@@ -1,7 +1,7 @@
 HECKTOR challenge
 ==============================
 
-Tools to preprocess the data of the HECKTOR challenge and run a baseline CNN segmentation on the training data (using NiftyNet). This repository contains the code used to prepare the data of the challenge (DICOM to NIfTI, SUV computation and bounding box generation, not needed for the participants). It also contains an example of implementation to resample the data within the bounding boxes and resample back to the original resolution, as well as a NiftyNet baseline implementation to train a CNN on 90% of the training data and evaluate the results on the remaining 10%.
+Tools to preprocess the data of the HECKTOR challenge and run a baseline CNN segmentation on the training data (using NiftyNet). This repository contains the code used to prepare the data of the challenge (DICOM to NIFTI, SUV computation and bounding box generation, not needed for the participants). It also contains an example of implementation to resample the data within the bounding boxes and resample back to the original resolution, as well as a NiftyNet baseline implementation to train a CNN on 90% of the training data and evaluate the results on the remaining 10%.
 
 
 Download Data
@@ -42,8 +42,9 @@ Project OrganizatioN
 
     ├── README.md                     
     ├── data                           <- NOT in the version control.
-    │   ├── resampled                  <- The data in the nifty resampled and cropped according to the bounding boxes (bbox.csv).
-    │   ├── hecktor_nii                <- The data converted in the nifty format with the original geometric frame
+    │   ├── resampled                  <- The data in NIFTI resampled and cropped according to the bounding boxes (bbox.csv).
+    │   ├── hecktor_nii                <- The data converted in the nifty format with the original geometric frame,
+    |   |                                 e.i. the one downloaded form AIcrowd
     │   └── bbox.csv                   <- The bounding box for each patient computed with AUTO_CROP_FUNC
     ├── requirements.txt               <- The requirements file for reproducing the analysis environment, e.g.
     │                                    generated with `pip freeze > requirements.txt`
@@ -68,7 +69,7 @@ Project OrganizatioN
         │   ├── config3D.ini
         │   ├── dataset_split.csv
         │   └── rename_output.py
-        └── resampling
+        └── resampling                 <- Code to resample the data 
             ├── __init__.py
             ├── cli_get_resolution.py
             ├── cli_resampling_back.py
