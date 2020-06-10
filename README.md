@@ -33,11 +33,11 @@ Evaluate Results
 ------------
 An example of how the evaluation will be computed is illustrated in the notebook `notebooks/evaluate_predictions.ipynb`.
 For the submission of the test results, you will need to resample back to the original CT resolution. 
-This is implemented in this ipynb prior to evaluation and can be used with niftynet output or other algorithms' outputs.
+This is implemented in this ipynb prior to evaluation and can be used with NiftyNet output or other algorithms' outputs.
 Alternatively, run `python src/resampling/cli_get_resolution.py` followed by `python src/resampling/cli_resampling_back.py`
 to resample your results back to the original CT resolution. (For more information `python src/resampling/cli_resampling_back.py --help`)
 
-Project Organization
+Project OrganizatioN
 ------------
 
     ├── README.md                     
@@ -50,18 +50,19 @@ Project Organization
     ├── Makefile                       <- Used to do set up the environment and make the conversion of DICOM to NIFTI.
     ├── notebooks
     │   ├── crop_dataset.ipynb
-    │   └── evaluate_predictions.ipynb <- Example of how the evaluation will be computed. This example use the output of the NiftyNet model.
+    │   └── evaluate_predictions.ipynb <- Example of how the evaluation will be computed. This example use the output
+    |                                     of the NiftyNet model.
     └── src                            <- Source code for use in this project.
         ├── data                       <- Scripts to download or generate data
         │   ├── __init__.py
-        │   ├── bounding_box.py
-        │   ├── dicom_conversion.py
+        │   ├── bounding_box.py        
+        │   ├── dicom_conversion.py    <- Conversion of the DICOM to NIFTI and computation of the bounding boxes.
         │   └── make_dataset.py
         ├── evaluation
         |   ├── __init__.py
-        │   ├── cli_compute_scores.py
+        │   ├── cli_compute_scores.py  <- Example of how the score will be computed.
         │   └── scores.py
-        ├── niftynet
+        ├── niftynet                   <- Code to reproduce the experiments with NiftyNet.
         │   ├── __init__.py
         │   ├── config2D.ini
         │   ├── config3D.ini
