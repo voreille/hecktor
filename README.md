@@ -67,14 +67,14 @@ Project Organization
         │   ├── config3D.ini
         │   ├── dataset_split.csv
         │   └── rename_output.py
-        ├── resampling
-        │   ├── __init__.py
-        |   ├── cli_get_resolution.py
-        |   ├── cli_resampling_back.py
-        |   ├── cli_resampling.py
-        |   ├── resampling.py
-        |   └── utils.py
-        └── tox.ini                       <- tox file with settings for running tox; see tox.readthedocs.io
+        └── resampling
+            ├── __init__.py
+            ├── cli_get_resolution.py
+            ├── cli_resampling_back.py
+            ├── cli_resampling.py
+            ├── resampling.py
+            └── utils.py
+         
 
 --------
 
