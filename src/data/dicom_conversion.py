@@ -308,7 +308,7 @@ def get_physical_values_pt(slices, patient_weight, dtype=np.float32):
             "%Y%m%d%H%M%S")
 
         try:
-            if (serie_datetime < acquisition_datetime) and (
+            if (serie_datetime <= acquisition_datetime) and (
                     serie_datetime > datetime(1950, 1, 1)):
                 scan_datetime = serie_datetime
             else:
