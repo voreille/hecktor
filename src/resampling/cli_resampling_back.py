@@ -1,5 +1,6 @@
 import os
 from multiprocessing import Pool
+from pathlib import Path
 
 import click
 import logging
@@ -18,7 +19,9 @@ path_res = "data/original_resolution_ct.csv"
                 type=click.Path(exists=True),
                 default=path_input)
 @click.argument('output_folder', type=click.Path(), default=path_output)
-@click.argument('bounding_boxes_file', type=click.Path(), default=path_bb)
+@click.argument('bounding_boxes_file',
+                type=click.Path(),
+                default=path_bb)
 @click.argument('original_resolution_file',
                 type=click.Path(),
                 default=path_res)
@@ -32,12 +35,8 @@ def main(input_folder, output_folder, bounding_boxes_file,
     bb_df = bb_df.set_index('PatientID')
     resolution_df = pd.read_csv(original_resolution_file)
     resolution_df = resolution_df.set_index('PatientID')
-    files_list = [
-        str(f.resolve()) for f in Path(input_folder).rglob('*gtv?.nii.gz')
-    ]
-    patient_list = [
-        f.name[:7] for f in Path(input_folder).rglob('*gtv?.nii.gz')
-    ]
+    files_list = [str(f.resolve()) for f in Path(input_folder).rglob('*gtv?.nii.gz')]
+    patient_list = [f.name[:7] for f in Path(input_folder).rglob('*gtv?.nii.gz')]
     resampler = Resampler(bb_df, output_folder, order)
     resolution_list = [(resolution_df.loc[k, 'Resolution_x'],
                         resolution_df.loc[k, 'Resolution_y'],
