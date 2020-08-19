@@ -1,7 +1,7 @@
 HECKTOR challenge
 ==============================
 
-This repository gives an example on how to preprocess the data of the HECKTOR challenge and run a baseline CNN segmentation on the training data (using NiftyNet). Any other preprocessing is welcomed and any framework can be used for the challenge, the only requirement is to submit the results in the same reference frame as the original CT images (same spacing and same origin). This repository also contains the code used to prepare the data of the challenge (DICOM to NIFTI, SUV computation and bounding box generation, not needed for the participants). Moreover, it contains an example of implementation to resample the data within the bounding boxes and resample back to the original resolution, as well as a NiftyNet baseline implementation to train a CNN on 90% of the training data and evaluate the results on the remaining 10%.
+This repository gives an example on how to preprocess the data of the HECKTOR challenge and run a baseline CNN segmentation on the training data (using NiftyNet). Any other preprocessing is welcomed and any framework can be used for the challenge, the only requirement is to submit the results in the same coordinate system as the original CT images (same spacing and same origin). This repository also contains the code used to prepare the data of the challenge (DICOM to NIFTI, SUV computation and bounding box generation, not needed for the participants). Moreover, it contains an example of implementation to resample the data within the bounding boxes and resample back to the original resolution, as well as a NiftyNet baseline implementation to train a CNN on 90% of the training data and evaluate the results on the remaining 10%.
 
 
 Download Data
