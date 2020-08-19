@@ -1,6 +1,5 @@
 import os
 from multiprocessing import Pool
-import glob
 
 import click
 import logging
@@ -8,47 +7,25 @@ import pandas as pd
 
 from src.resampling.resampling import Resampler
 
+path_input = "segmentation_output_renamed"
+path_output = "data/segmentation_output_tosubmit"
+path_bb = "data/bbox.csv"
+path_res = "data/original_resolution_ct.csv"
+
 
 @click.command()
 @click.argument('input_folder',
                 type=click.Path(exists=True),
-                default='data/segmentation_output_renamed')
-@click.argument('output_folder',
-                type=click.Path(),
-                default='data/segmentation_output_tosubmit')
-@click.argument('bounding_boxes_file',
-                type=click.Path(),
-                default='data/bbox.csv')
+                default=path_input)
+@click.argument('output_folder', type=click.Path(), default=path_output)
+@click.argument('bounding_boxes_file', type=click.Path(), default=path_bb)
 @click.argument('original_resolution_file',
                 type=click.Path(),
-                default='data/original_resolution.csv')
-@click.option('--cores',
-              type=click.INT,
-              default=1,
-              help='The number of workers for parallelization.')
-@click.option('--order',
-              type=click.INT,
-              nargs=1,
-              default=3,
-              help='The order of the spline interpolation used to resample')
+                default=path_res)
+@click.option('--cores', type=click.INT, default=1)
+@click.option('--order', type=click.INT, nargs=1, default=3)
 def main(input_folder, output_folder, bounding_boxes_file,
          original_resolution_file, cores, order):
-    """ This command line interface allows to resample NIFTI files back to the
-        original resolution contained in ORIGINAL_RESOLUTION_FILE (this file
-        can be gerenated with the file src/resampling/cli_get_resolution.py).
-        It also needs the bounding boxes contained in BOUNDING_BOXES_FILE.
-        The images are resampled with spline interpolation
-        of degree --order (default=3) and the segmentation are resampled by
-        nearest neighbor interpolation.
-
-        INPUT_FOLDER is the path of the folder containing the NIFTI to
-        resample.
-        OUTPUT_FOLDER is the path of the folder where to store the
-        resampled NIFTI files.
-        BOUNDING_BOXES_FILE is the path of the .csv file containing the
-        bounding boxes of each patient.
-    """
-
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
     bb_df = pd.read_csv(bounding_boxes_file)
@@ -56,10 +33,12 @@ def main(input_folder, output_folder, bounding_boxes_file,
     resolution_df = pd.read_csv(original_resolution_file)
     resolution_df = resolution_df.set_index('PatientID')
     files_list = [
-        f for f in glob.glob(input_folder + '/**/*_GTV?.nii', recursive=True)
+        str(f.resolve()) for f in Path(input_folder).rglob('*gtv?.nii.gz')
+    ]
+    patient_list = [
+        f.name[:7] for f in Path(input_folder).rglob('*gtv?.nii.gz')
     ]
     resampler = Resampler(bb_df, output_folder, order)
-    patient_list = [f.split('/')[-2] for f in files_list]
     resolution_list = [(resolution_df.loc[k, 'Resolution_x'],
                         resolution_df.loc[k, 'Resolution_y'],
                         resolution_df.loc[k, 'Resolution_z'])
