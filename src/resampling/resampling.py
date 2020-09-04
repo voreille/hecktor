@@ -26,7 +26,7 @@ class Resampler():
     def __call__(self, f, resampling=None):
         if resampling is None:
             resampling = self.resampling
-        patient_name = f.split('/')[-1].split('_')[0]
+        patient_name = f.split('/')[-1][:7]
         # patient_folder = os.path.join(self.output_folder, patient_name)
         # if not os.path.exists(patient_folder):
         #     os.mkdir(patient_folder)
