@@ -63,7 +63,7 @@ def resample_and_crop(input_file,
             raise ValueError(
                 'Resampling value cannot be negative, except for -1')
 
-    if 'gtv' in input_file or 'GTV' in input_file:
+    if ('gtv' in input_file or 'GTV' in input_file or order == 'nearest'):
         np_volume = resample_np_binary_volume(np_volume, origin, pixel_spacing,
                                               resampling, bounding_box)
     else:

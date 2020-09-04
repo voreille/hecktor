@@ -24,9 +24,8 @@ path_res = "data/original_resolution_ct.csv"
                 type=click.Path(),
                 default=path_res)
 @click.option('--cores', type=click.INT, default=1)
-@click.option('--order', type=click.INT, nargs=1, default=3)
 def main(input_folder, output_folder, bounding_boxes_file,
-         original_resolution_file, cores, order):
+         original_resolution_file, cores):
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
     bb_df = pd.read_csv(bounding_boxes_file)
@@ -34,12 +33,12 @@ def main(input_folder, output_folder, bounding_boxes_file,
     resolution_df = pd.read_csv(original_resolution_file)
     resolution_df = resolution_df.set_index('PatientID')
     files_list = [
-        str(f.resolve()) for f in Path(input_folder).rglob('*gtv?.nii.gz')
+        str(f.resolve()) for f in Path(input_folder).rglob('*.nii.gz')
     ]
     patient_list = [
-        f.name[:7] for f in Path(input_folder).rglob('*gtv?.nii.gz')
+        f.name[:7] for f in Path(input_folder).rglob('*.nii.gz')
     ]
-    resampler = Resampler(bb_df, output_folder, order)
+    resampler = Resampler(bb_df, output_folder, order='nearest')
     resolution_list = [(resolution_df.loc[k, 'Resolution_x'],
                         resolution_df.loc[k, 'Resolution_y'],
                         resolution_df.loc[k, 'Resolution_z'])
