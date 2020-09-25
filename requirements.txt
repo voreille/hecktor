@@ -11,5 +11,5 @@ simpleitk
 scikit-image
 niftynet
 jupyter
-tensorflow-gpu==1.15
+tensorflow-gpu==1.15.4
 
