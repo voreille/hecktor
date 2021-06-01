@@ -6,7 +6,7 @@ This repository gives an example on how to preprocess the data of the HECKTOR ch
 
 Download Data
 ------------
-To access the data, visit the challenge website: https://www.aicrowd.com/challenges/hecktor and follow the instructions.
+To access the data, visit the challenge website: https://www.aicrowd.com/challenges/miccai-2021-hecktor and follow the instructions.
 The code included here was intended to work with a specific repository structure described in Section Project Organization.
 Following `git clone https://github.com/voreille/hecktor.git`, create a `data/` folder in the repository and place the unzipped data in it.
 
