@@ -7,7 +7,7 @@ import pandas as pd
 from okapy.dicomconverter.converter import NiftiConverter
 
 from src.data.bounding_box import bbox_auto
-from src.data.utils import keep_oldest_rtstruct, correct_filename
+from src.data.utils import keep_newest_rtstruct, correct_filename
 
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -45,8 +45,8 @@ def main(input_folder, output_images_folder, output_files_folder, subfolders):
     Raises:
         ValueError: Raised if more than 1 RTSTRUCT file is found
     """
-    logger.info("Keeping only oldest RTSTRUCT per patient")
-    keep_oldest_rtstruct("/home/val/python_wkspce/hecktor/data/raw/poitier_train/",
+    logger.info("Keeping only newest RTSTRUCT per patient")
+    keep_newest_rtstruct("/home/val/python_wkspce/hecktor/data/raw/poitier_train/",
                          project_dir / "data/surnumerary_rtstructs/")
     logger.info("Converting Dicom to Nifty - START")
 
