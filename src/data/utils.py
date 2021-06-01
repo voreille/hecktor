@@ -21,7 +21,7 @@ def get_datetime(s):
                              "%Y%m%d%H%M%S")
 
 
-def keep_oldest_rtstruct(input_folder, archive_folder):
+def keep_newest_rtstruct(input_folder, archive_folder):
     rtstruct_paths = [f for f in Path(input_folder).rglob("*RTSTRUCT*.dcm")]
     rt_data_list = [
         pdcm.read_file(f, stop_before_pixels=True)
