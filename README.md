@@ -6,7 +6,7 @@ This repository gives an example on how to preprocess the data of the HECKTOR ch
 
 Download Data
 ------------
-To access the data, visit the challenge website: https://www.aicrowd.com/challenges/hecktor and follow the instructions.
+To access the data, visit the challenge website: https://www.aicrowd.com/challenges/miccai-2021-hecktor and follow the instructions.
 The code included here was intended to work with a specific repository structure described in Section Project Organization.
 Following `git clone https://github.com/voreille/hecktor.git`, create a `data/` folder in the repository and place the unzipped data in it.
 
@@ -15,19 +15,9 @@ Install Dependencies
 To install the necessary dependencies you can use `pip install -r requirements.txt`. It is advised to use it within
 a python3 virtual environment.
 
-
 Resample Data
 ------------
 Run `python src/resampling/cli_resampling.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/cli_resampling.py --help` for more informations).
-
-Train a CNN
-------------
-Use cuda-10 for GPU usage.
-`cd src/niftynet` and run `net_segment train -c config3D.ini` for training, followed by
-`net_segment inference -c config3D.ini` for inference and `net_segment evaluation -c config3D.ini` for evaluation. 
-A random 90%-10% split is used for training and testing. 
-Note that the HECKTOR test data will come from a center different from the four training centers, you may want to evaluate your generalization across centers.
-A renaming function should be used to comply with the format needed for the test evaluation; run `python rename_output.py` to create a folder with correct file names.
 
 Evaluate Results
 ------------
