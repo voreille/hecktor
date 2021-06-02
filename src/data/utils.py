@@ -1,19 +1,20 @@
 from pathlib import Path
 from datetime import datetime
 from shutil import move
+import warnings
+import logging
 
-import pydicom as pdcm
-from tqdm import tqdm
+import numpy as np
+import pandas as pd
+from scipy.ndimage.measurements import label
+import SimpleITK as sitk
 
+from src.data.bounding_box import bbox_auto
 
-def correct_filename(filename):
-    output = filename.replace("HN-CHUS-", "CHUS")
-    output = output.replace("HN-CHUM-", "CHUM")
-    output = output.replace("HN-HGJ-", "CHGJ")
-    output = output.replace("HN-HMR-", "CHMR")
-    output = output.replace("HN-CHUV-", "CHUV")
-    output = output.replace("HN-CHUV-", "CHUV")
-    return output
+log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_fmt)
+logging.captureWarnings(True)
+logger = logging.getLogger(__name__)
 
 
 def get_datetime(s):
@@ -21,33 +22,111 @@ def get_datetime(s):
                              "%Y%m%d%H%M%S")
 
 
-def keep_newest_rtstruct(input_folder, archive_folder):
-    rtstruct_paths = [f for f in Path(input_folder).rglob("*RTSTRUCT*.dcm")]
-    rt_data_list = [
-        pdcm.read_file(f, stop_before_pixels=True)
-        for f in tqdm(rtstruct_paths)
-    ]
-    rt_list = zip(rtstruct_paths, rt_data_list)
-    patient_names = [f.PatientName for f in rt_data_list]
-    patient_names = list(set(patient_names))
+def move_extra_vois(input_folder, archive_folder):
+    input_folder = Path(input_folder)
     archive_folder = Path(archive_folder)
-    archive_folder.mkdir(parents=True, exist_ok=True)
-    for patient_name in patient_names:
-        rt_list_p = [f for f in rt_list if f[1].PatientName == patient_name]
-        rt_list_p.sort(key=lambda x: get_datetime(x[1]))
-        rts_to_move = rt_list_p[:-1]
-        path_to_move = Path(archive_folder) / str(patient_name)
-        path_to_move.mkdir(exist_ok=True)
-        for r in rts_to_move:
-            file_source = r[0]
-            file_destination = path_to_move / file_source.name
-            new_path = file_destination
-            counter = 0
-            while new_path.is_file():
-                counter += 1
-                new_path = file_destination.with_name(
-                    file_destination.name.replace(
-                        '.' + file_destination.suffix, '') + '(' +
-                    str(counter) + ')' + '.' + file_destination.suffix)
+    voi_files = [
+        f for f in Path(input_folder).rglob("*RTSTRUCT*") if "PT" in f.name
+    ]
+    for f in voi_files:
+        move(f, archive_folder / f.name)
 
-            move(str(file_source.parent.resolve()), str(new_path.resolve()))
+    patient_ids = list(
+        set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
+
+    for patient_id in patient_ids:
+        voi_files = [
+            f for f in Path(input_folder).rglob("*RTSTRUCT*")
+            if patient_id == f.name.split("__")[0]
+        ]
+        if len(voi_files) == 1:
+            continue
+        elif len(voi_files) == 0:
+            warnings.warn(f"patient {patient_id} has no VOI")
+            continue
+
+        voi_datetimes = [
+            datetime.strptime(
+                f.name.split("__")[-1].split(".")[0], "%Y-%m-%d_%H-%M-%S")
+            for f in voi_files
+        ]
+        voi_files_dates = list(zip(voi_files, voi_datetimes))
+        voi_files_dates.sort(key=lambda x: x[1])
+        for f, _ in voi_files_dates[:-1]:
+            move(f, archive_folder / f.name)
+
+
+def correct_names(input_folder, mapping):
+    input_folder = Path(input_folder)
+    mapping_df = pd.read_csv(mapping)
+    mapping_dict = {
+        k: i
+        for k, i in zip(list(mapping_df["dicom_id"]),
+                        list(mapping_df["hecktor_id"]))
+    }
+    files = [
+        f for f in input_folder.rglob("*.nii.gz")
+        if not f.name.startswith("CHU")
+    ]
+    for file in files:
+        patient_id, modality = file.name.split("__")[:2]
+        new_name = (mapping_dict[patient_id] + "_" + modality.lower() +
+                    ".nii.gz")
+        file.rename(file.parent / new_name)
+
+
+def remove_extra_components(mask, patient_id, threshold=0.01):
+    array = sitk.GetArrayFromImage(mask)
+    array_label, num_features = label(array)
+    if num_features > 1:
+        total_n_vox = int(np.sum(array))
+        components = np.array(list(range(1, num_features + 1)))
+        volumes = np.array([np.sum(array_label == n) for n in components])
+        components_to_keep = components[volumes > threshold * total_n_vox]
+        array = np.zeros_like(array)
+        for c in components_to_keep:
+            array += (array_label == c).astype(np.uint8)
+        final_n_vox = int(np.sum(array))
+        logger.warning(f"GTVt for patient {patient_id} "
+                       f"has multiple components, keeping"
+                       f"only the largest, total_voxels: {total_n_vox}"
+                       f" -> final_voxels: {final_n_vox}")
+        output = sitk.GetImageFromArray(array)
+        output.SetDirection(mask.GetDirection())
+        output.SetOrigin(mask.GetOrigin())
+        output.SetSpacing(mask.GetSpacing())
+        return output
+    else:
+        return mask
+
+
+def clean_vois(input_folder):
+    input_folder = Path(input_folder)
+    for f in input_folder.rglob("*gtvt.nii.gz"):
+        patient_id = f.name.split("_")[0]
+        mask = sitk.ReadImage(str(f.resolve()))
+        mask = remove_extra_components(mask, patient_id)
+        filepath = str((f.parent / (f.name.split(".")[0] + "_corrected" +
+                                    "".join(f.suffixes))).resolve())
+        sitk.WriteImage(mask, filepath)
+
+
+def compute_bbs(input_folder):
+    input_folder = Path(input_folder)
+    bb_df = pd.DataFrame()
+    for file in input_folder.rglob("*pt.nii.gz"):
+        patient_name = file.name.split("_")[0]
+        pet_image = sitk.ReadImage(str(file.resolve()))
+        bb = bbox_auto(pet_image)
+        bb_df = bb_df.append(
+            {
+                'PatientID': patient_name,
+                'x1': bb[0],
+                'x2': bb[1],
+                'y1': bb[2],
+                'y2': bb[3],
+                'z1': bb[4],
+                'z2': bb[5],
+            },
+            ignore_index=True)
+    return bb_df

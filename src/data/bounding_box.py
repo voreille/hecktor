@@ -4,11 +4,7 @@ from scipy.ndimage import gaussian_filter
 from scipy.ndimage.measurements import label
 
 
-def bbox_auto(np_pt,
-              px_spacing_pt,
-              px_origin_pt,
-              output_shape=(144, 144, 144),
-              th=3):
+def bbox_auto(sitk_pt, output_shape=(144, 144, 144), th=3):
     """Find a bounding box automatically based on the SUV
 
     Arguments:
@@ -23,8 +19,12 @@ def bbox_auto(np_pt,
     Returns:
         [type] -- [description]
     """
+    np_pt = np.transpose(sitk.GetArrayFromImage(sitk_pt), (2, 1, 0))
+    px_spacing_pt = sitk_pt.GetSpacing()
+    px_origin_pt = sitk_pt.GetOrigin()
 
-    output_shape_pt = tuple(e1 / e2 for e1, e2 in zip(output_shape, px_spacing_pt))
+    output_shape_pt = tuple(e1 / e2
+                            for e1, e2 in zip(output_shape, px_spacing_pt))
     # Gaussian smooth
     np_pt_gauss = gaussian_filter(np_pt, sigma=3)
     # auto_th: based on max SUV value in the top of the PET scan
@@ -36,7 +36,8 @@ def bbox_auto(np_pt,
     labeled_array, _ = label(np_pt_thgauss)
     try:
         np_pt_brain = labeled_array == np.argmax(
-            np.bincount(labeled_array[:,:,np_pt.shape[2] * 2 // 3:].flat)[1:]) + 1
+            np.bincount(labeled_array[:, :,
+                                      np_pt.shape[2] * 2 // 3:].flat)[1:]) + 1
     except:
         print('th too high?')
         # Quick fix just to pass for all cases
@@ -44,7 +45,8 @@ def bbox_auto(np_pt,
         np_pt_thgauss = np.where(np_pt_gauss > th, 1, 0)
         labeled_array, _ = label(np_pt_thgauss)
         np_pt_brain = labeled_array == np.argmax(
-            np.bincount(labeled_array[:,:,np_pt.shape[2] * 2 // 3:].flat)[1:]) + 1
+            np.bincount(labeled_array[:, :,
+                                      np_pt.shape[2] * 2 // 3:].flat)[1:]) + 1
     # Find lowest voxel of the brain and box containing the brain
     z = np.min(np.argwhere(np.sum(np_pt_brain, axis=(0, 1))))
     y1 = np.min(np.argwhere(np.sum(np_pt_brain, axis=(0, 2))))
@@ -73,7 +75,8 @@ def bbox_auto(np_pt,
 
     if np.int((x2 + x1) / 2 - np.int(output_shape_pt[0] / 2)) < 0:
         xbb = (0, output_shape_pt[0])
-    elif np.int((x2 + x1) / 2 - np.int(output_shape_pt[0] / 2)) > np_pt.shape[0]:
+    elif np.int((x2 + x1) / 2 -
+                np.int(output_shape_pt[0] / 2)) > np_pt.shape[0]:
         xbb = np_pt.shape[0] - output_shape_pt[0], np_pt.shape[0]
     else:
         xbb = ((x2 + x1) / 2 - output_shape_pt[0] / 2,
@@ -87,6 +90,6 @@ def bbox_auto(np_pt,
     z_abs = z_pt * px_spacing_pt[2] + px_origin_pt[2]
     y_abs = y_pt * px_spacing_pt[1] + px_origin_pt[1]
     x_abs = x_pt * px_spacing_pt[0] + px_origin_pt[0]
-    
+
     bb = np.asarray((x_abs, y_abs, z_abs)).flatten()
     return bb

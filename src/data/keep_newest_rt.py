@@ -7,7 +7,7 @@ import pydicom as pdcm
 from tqdm import tqdm
 
 project_dir = Path(__file__).resolve().parents[2]
-default_input_folder = project_dir / "data/raw/poitier_train"
+default_input_folder = project_dir / "data/raw/HECKTOR_CHUP"
 default_archive_folder = project_dir / "data/surnumerary_rtstruct/"
 
 
