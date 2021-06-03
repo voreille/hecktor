@@ -47,8 +47,8 @@ Project Organization
         ├── data                       <- Scripts to download or generate data
         │   ├── __init__.py
         │   ├── bounding_box.py        
-        │   ├── dicom_conversion.py    <- Conversion of the DICOM to NIFTI and computation of the bounding boxes.
-        │   └── make_dataset.py
+        │   ├── utils.py               <- Define functions used in make_dataset.py
+        │   └── make_dataset.py        <- Conversion of the DICOM to NIFTI and computation of the bounding boxes.
         ├── evaluation
         |   ├── __init__.py
         │   ├── cli_compute_scores.py  <- Example of how the score will be computed.
