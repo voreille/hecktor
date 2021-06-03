@@ -9,7 +9,5 @@ pandas
 pydicom
 simpleitk
 scikit-image
-niftynet
 jupyter
-tensorflow-gpu==1.15
 
