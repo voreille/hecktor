@@ -129,4 +129,4 @@ def compute_bbs(input_folder):
                 'z2': bb[5],
             },
             ignore_index=True)
-    return bb_df
+    return bb_df.set_index("PatientID")

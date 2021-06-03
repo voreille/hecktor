@@ -1,29 +1,27 @@
 from pathlib import Path
 import logging
 
+logging.basicConfig(
+    filename="dicom_conversion.log",
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.captureWarnings(True)
+logger = logging.getLogger(__name__)
+
 import click
-import SimpleITK as sitk
 import pandas as pd
 from okapy.dicomconverter.converter import NiftiConverter
 
-from src.data.bounding_box import bbox_auto
 from src.data.utils import (correct_names, move_extra_vois, clean_vois,
                             compute_bbs)
 
 project_dir = Path(__file__).resolve().parents[2]
 default_input_path = project_dir / "data/raw"
-default_images_folder = project_dir / "data/hecktor2021/hecktor_nii/"
+default_images_folder = project_dir / "data/hecktor2021_2/hecktor_nii/"
 default_files_folder = project_dir / "data/hecktor2021/"
-default_archive = project_dir / "data/surnumerary_voi"
-default_name_mapping = project_dir / "data/hecktor2021/name_mapping_training.csv"
-
-log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(filename=project_dir / "data/dataset_processing.log",
-                    encoding='utf-8',
-                    level=logging.INFO,
-                    format=log_fmt)
-logging.captureWarnings(True)
-logger = logging.getLogger(__name__)
+default_archive = project_dir / "data/extra_voi"
+default_name_mapping = project_dir / "data/hecktor2021/hecktor2021_name_mapping_training.csv"
+default_bb_file = project_dir / "data/hecktor2021/hecktor2021_bbox_training.csv"
 
 
 @click.command()
@@ -36,6 +34,7 @@ logger = logging.getLogger(__name__)
 @click.argument('output_files_folder',
                 type=click.Path(),
                 default=default_files_folder)
+@click.argument('bb_file', type=click.Path(), default=default_bb_file)
 @click.option("--archive_folder",
               "-a",
               type=click.Path(),
@@ -43,50 +42,41 @@ logger = logging.getLogger(__name__)
 @click.option("--name_mapping",
               type=click.Path(),
               default=default_name_mapping)
-@click.option('--subfolders', is_flag=True)
-def main(input_folder, output_images_folder, output_files_folder,
-         archive_folder, name_mapping, subfolders):
-    """Command Line Interface to make the conversion from DICOM to NIFTI,
-       computing Hounsfield units and SUV for CT and PT respectively.
-
-    Args:
-        input_folder (str): Path to the folder containing the DICOM files
-        output_folder_nii (str): Path to the folder where the NIFTI will be
-                               stored.
-        subfolders (bool): Wether to create one subfolder for each patient
-                           or to store everything within the same directory.
-
-    Raises:
-        ValueError: Raised if more than 1 RTSTRUCT file is found
+def main(input_folder, output_images_folder, output_files_folder, bb_file,
+         archive_folder, name_mapping):
+    """Command Line Interface to make the dataset for the HECKTOR Challenge
+        In short, this routine convert the DICOM files to NIFTI and stores the CT in 
+        Hounsfield Unit and the PET in Standardized Uptake value.
     """
+
     output_images_folder = Path(output_images_folder)
     output_files_folder = Path(output_files_folder)
     archive_folder = Path(archive_folder)
     output_images_folder.mkdir(exist_ok=True)
     archive_folder.mkdir(exist_ok=True)
-    # logger.info("Converting Dicom to Nifty - START")
-    # converter = NiftiConverter(
-    #     padding="whole_image",
-    #     resampling_spacing=-1,
-    #     list_labels=["GTVt"],
-    #     cores=10,
-    # )
-    # _ = converter(input_folder, output_folder=output_images_folder)
+    logger.info("Converting Dicom to Nifty - START")
+    converter = NiftiConverter(
+        padding="whole_image",
+        resampling_spacing=-1,
+        list_labels=["GTVt"],
+        cores=10,
+    )
+    _ = converter(input_folder, output_folder=output_images_folder)
 
-    # logger.info("Converting Dicom to Nifty - END")
-    # logger.info("Removing extra VOI - START")
-    # move_extra_vois(output_images_folder, archive_folder)
-    # logger.info("Removing extra VOI - END")
-    # logger.info("Renaming files- START")
-    # correct_names(output_images_folder, name_mapping)
-    # logger.info("Renaming files- END")
+    logger.info("Converting Dicom to Nifty - END")
+    logger.info("Removing extra VOI - START")
+    move_extra_vois(output_images_folder, archive_folder)
+    logger.info("Removing extra VOI - END")
+    logger.info("Renaming files- START")
+    correct_names(output_images_folder, name_mapping)
+    logger.info("Renaming files- END")
     logger.info("Cleaning the VOIs - START")
     clean_vois(output_images_folder)
     logger.info("Cleaning the VOIs - END")
 
     logger.info("Computing the bounding boxes - START")
     bb_df = compute_bbs(output_images_folder)
-    bb_df.to_csv(output_files_folder / "bounding_boxes_training.csv")
+    bb_df.to_csv(bb_file)
     logger.info("Computing the bounding boxes - END")
 
 

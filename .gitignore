@@ -99,3 +99,4 @@ target/
 # Snakemake
 
 .snakemake/
+notebooks/quality_control_nii.ipynb
