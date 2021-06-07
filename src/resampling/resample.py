@@ -92,11 +92,8 @@ def main(input_folder, output_folder, bounding_boxes_file, cores, resampling,
         sitk.WriteImage(gtvt,
                         str((output_folder / (p + "_gtvt.nii.gz")).resolve()))
 
-    # with Pool(cores) as p:
-    #     p.map(resample_one_patient, patient_list)
-
-    for patient in patient_list:
-        resample_one_patient(patient)
+    with Pool(cores) as p:
+        p.map(resample_one_patient, patient_list)
 
 
 if __name__ == '__main__':
