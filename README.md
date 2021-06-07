@@ -17,7 +17,7 @@ a python3 virtual environment.
 
 Resample Data
 ------------
-Run `python src/resampling/resample.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/cli_resampling.py --help` for more informations).
+Run `python src/resampling/resample.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/resample.py --help` for more informations).
 
 Evaluate Results
 ------------
