@@ -40,7 +40,6 @@ Project Organization
     │                                    generated with `pip freeze > requirements.txt`
     ├── Makefile                       <- Used to do set up the environment and make the conversion of DICOM to NIFTI.
     ├── notebooks
-    │   ├── crop_dataset.ipynb
     │   └── evaluate_predictions.ipynb <- Example of how the evaluation will be computed. This example use the output
     |                                     of the NiftyNet model.
     └── src                            <- Source code for use in this project.
@@ -55,11 +54,7 @@ Project Organization
         │   └── scores.py
         └── resampling                 <- Code to resample the data 
             ├── __init__.py
-            ├── cli_get_resolution.py
-            ├── cli_resampling_back.py
-            ├── cli_resampling.py
-            ├── resampling.py
-            └── utils.py
+            └── resample.py
          
 
 --------

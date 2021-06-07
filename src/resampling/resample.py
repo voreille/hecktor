@@ -9,10 +9,8 @@ import SimpleITK as sitk
 
 # Default paths
 path_in = 'data/hecktor_nii/'
-# path_in = '/home/valentin/python_wkspce/hecktor/data/hecktor2021_train/hecktor_nii'
 path_out = 'data/resampled/'
 path_bb = 'data/bbox.csv'
-# path_bb = '/home/valentin/python_wkspce/hecktor/data/hecktor2021_train/hecktor2021_bbox_training.csv'
 
 
 @click.command()
@@ -32,17 +30,11 @@ path_bb = 'data/bbox.csv'
               'on one or more dimension a value of -1 can be fed '
               'e.g. --resampling 1.0 1.0 -1 will resample the x '
               'and y axis at 1 mm/px and left the z axis untouched.')
-@click.option('--order',
-              type=click.INT,
-              nargs=1,
-              default=3,
-              help='The order of the spline interpolation used to resample')
-def main(input_folder, output_folder, bounding_boxes_file, cores, resampling,
-         order):
+def main(input_folder, output_folder, bounding_boxes_file, cores, resampling):
     """ This command line interface allows to resample NIFTI files within a
         given bounding box contain in BOUNDING_BOXES_FILE. The images are
         resampled with spline interpolation
-        of degree --order (default=3) and the segmentation are resampled
+        of degree 3 and the segmentation are resampled
         by nearest neighbor interpolation.
 
         INPUT_FOLDER is the path of the folder containing the NIFTI to
@@ -92,8 +84,10 @@ def main(input_folder, output_folder, bounding_boxes_file, cores, resampling,
         sitk.WriteImage(gtvt,
                         str((output_folder / (p + "_gtvt.nii.gz")).resolve()))
 
-    with Pool(cores) as p:
-        p.map(resample_one_patient, patient_list)
+    for p in patient_list:
+        resample_one_patient(p)
+    # with Pool(cores) as p:
+    #    p.map(resample_one_patient, patient_list)
 
 
 if __name__ == '__main__':
