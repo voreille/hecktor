@@ -100,3 +100,4 @@ target/
 
 .snakemake/
 notebooks/quality_control_nii.ipynb
+notebooks/hausdorff.ipynb
