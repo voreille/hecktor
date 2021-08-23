@@ -1,1 +1,5 @@
+numpy
+pandas
+SimpleITK
+tqdm
 ./surface-distance/
