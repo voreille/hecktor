@@ -31,28 +31,36 @@ Project Organization
 ------------
 
     ├── README.md                     
-    ├── data                           <- NOT in the version control.
-    │   ├── resampled                  <- The data in NIFTI resampled and cropped according to the bounding boxes (bbox.csv).
-    │   ├── hecktor_nii                <- The data converted in the nifty format with the original geometric frame,
-    |   |                                 e.i. the one downloaded form AIcrowd
-    │   └── bbox.csv                   <- The bounding box for each patient computed with AUTO_CROP_FUNC
-    ├── requirements.txt               <- The requirements file for reproducing the analysis environment, e.g.
-    │                                    generated with `pip freeze > requirements.txt`
-    ├── Makefile                       <- Used to do set up the environment and make the conversion of DICOM to NIFTI.
+    ├── data                              <- NOT in the version control
+    │   ├── resampled                     <- The data in NIFTI resampled and cropped according to the bounding boxes (bbox.csv).
+    │   ├── hecktor_nii                   <- The data converted in the nifty format with the original geometric frame,
+    |   |                                    e.i. the one downloaded form AIcrowd
+    │   └── bbox.csv                      <- The bounding box for each patient computed with bbox_auto function from src.data.bounding_box
+    ├── requirements.txt                  <- The requirements file for reproducing the analysis environment, e.g.
+    │                                        generated with `pip freeze > requirements.txt`
+    ├── Makefile                          <- Used to do set up the environment and make the conversion of DICOM to NIFTI
     ├── notebooks
-    │   └── evaluate_predictions.ipynb <- Example of how the evaluation will be computed. This example use the output
-    |                                     of the NiftyNet model.
-    └── src                            <- Source code for use in this project.
-        ├── data                       <- Scripts to download or generate data
+    │   └── evaluate_predictions.ipynb    <- Example of how the evaluation will be computed. This example use the output
+    |                                        of the NiftyNet model
+    └── src                               <- Source code for use in this project
+        ├── aicrowd_evaluator             <- Source code for the evaluation on the AIcrowd platform
+        │   ├── __init__.py
+        │   ├── surface-distance/         <- code to compute the robust Hausdorff distance availabe at https://github.com/deepmind/surface-distance        
+        │   ├── hecktor_seg_evaluator.py  <- Define the evaluator class to compute segmentation results
+        │   ├── hecktor_surv_evaluator.py <- Define the evaluator class to compute survival results
+        │   ├── segmentation_metrics.py   <- Define the metrics used in hecktor_seg_evaluator.py
+        |   ├── requirements.txt          <- The requirements file specific to this submodule
+        │   └── survival_metrics.py       <- Define the metrics used in hecktor_surv_evaluator.py
+        ├── data                          <- Scripts to generate data
         │   ├── __init__.py
         │   ├── bounding_box.py        
-        │   ├── utils.py               <- Define functions used in make_dataset.py
-        │   └── make_dataset.py        <- Conversion of the DICOM to NIFTI and computation of the bounding boxes.
+        │   ├── utils.py                  <- Define functions used in make_dataset.py
+        │   └── make_dataset.py           <- Conversion of the DICOM to NIFTI and computation of the bounding boxes
         ├── evaluation
         |   ├── __init__.py
-        │   ├── cli_compute_scores.py  <- Example of how the score will be computed.
+        │   ├── cli_compute_scores.py     <- Example of how the score will be computed
         │   └── scores.py
-        └── resampling                 <- Code to resample the data 
+        └── resampling                    <- Code to resample the data 
             ├── __init__.py
             └── resample.py
          
