@@ -1,5 +1,6 @@
-numpy
-pandas
+pandas==0.22.0
+numpy==1.13.0
+numpydoc==0.7.0
 SimpleITK
 tqdm
 ./surface-distance/

@@ -1,0 +1,7 @@
+challenge:
+  name: HECKTOR2021
+  template: simple-evaluator
+  authors:
+    - name: Valentin Oreiller
+      email: valentin.oreiller@gmail.com
+  version: "0.1"
