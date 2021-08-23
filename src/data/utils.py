@@ -26,7 +26,8 @@ def move_extra_vois(input_folder, archive_folder):
     input_folder = Path(input_folder)
     archive_folder = Path(archive_folder)
     voi_files = [
-        f for f in Path(input_folder).rglob("*RTSTRUCT*") if "PT" in f.name
+        f for f in Path(input_folder).rglob("*RTSTRUCT*")
+        if "PT" in f.name or ")." in f.name
     ]
     for f in voi_files:
         move(f, archive_folder / f.name)
@@ -36,14 +37,17 @@ def move_extra_vois(input_folder, archive_folder):
 
     for patient_id in patient_ids:
         voi_files = [
-            f for f in Path(input_folder).rglob("*RTSTRUCT*")
+            f for f in Path(input_folder).rglob("*GTV*")
             if patient_id == f.name.split("__")[0]
         ]
-        if len(voi_files) == 1:
-            continue
-        elif len(voi_files) == 0:
-            warnings.warn(f"patient {patient_id} has no VOI")
-            continue
+        if len(voi_files) == 0:
+            voi_files = [
+                f for f in Path(input_folder).rglob("*RTSTRUCT*")
+                if patient_id == f.name.split("__")[0]
+            ]
+            if len(voi_files) == 0:
+                warnings.warn(f"patient {patient_id} has no VOI")
+                continue
 
         voi_datetimes = [
             datetime.strptime(
@@ -52,7 +56,12 @@ def move_extra_vois(input_folder, archive_folder):
         ]
         voi_files_dates = list(zip(voi_files, voi_datetimes))
         voi_files_dates.sort(key=lambda x: x[1])
-        for f, _ in voi_files_dates[:-1]:
+        voi_to_keep = voi_files_dates[-1][0]
+        voi_to_move = [
+            f for f in Path(input_folder).rglob("*RTSTRUCT*")
+            if patient_id == f.name.split("__")[0] and f != voi_to_keep
+        ]
+        for f in voi_to_move:
             move(f, archive_folder / f.name)
 
 
@@ -70,6 +79,9 @@ def correct_names(input_folder, mapping):
     ]
     for file in files:
         patient_id, modality = file.name.split("__")[:2]
+        patient_id = patient_id.replace("_ORL", "")
+        if "GTV" in modality:
+            modality = "gtvt"
         new_name = (mapping_dict[patient_id] + "_" + modality.lower() +
                     ".nii.gz")
         file.rename(file.parent / new_name)

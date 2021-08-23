@@ -1,0 +1,15 @@
+{
+    "evaluator_name" : "hecktor_evaluator",
+    "evaluator_class" : "HecktorEvaluator",
+    "challenge_client_name" : "your-challenge-client-name::for-admin-use-only",
+    "challenge_grader_id" : "your-challenge-grader-id::for-admin-use-only",
+    "evaluation_pipeline_version" : "1.0",
+    "authors" : [
+      {
+        "name" : "Sharada Mohanty",
+        "email" : "mohanty@aicrowd.com"
+      }
+    ],
+    "version": "0.1"
+  }
+  
