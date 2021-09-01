@@ -21,11 +21,10 @@ Run `python src/resampling/resample.py` to crop and resample the data following 
 
 Evaluate Results
 ------------
-An example of how the evaluation will be computed is illustrated in the notebook `notebooks/evaluate_predictions.ipynb`.
-For the submission of the test results, you will need to resample back to the original CT resolution. 
-This is implemented in this ipynb prior to evaluation and can be used with NiftyNet output or other algorithms' outputs.
-Alternatively, run `python src/resampling/cli_get_resolution.py` followed by `python src/resampling/cli_resampling_back.py`
-to resample your results back to the original CT resolution. (For more information `python src/resampling/cli_resampling_back.py --help`)
+An example of how the segmentation (task 1) will be evaluated is illustrated in the notebook `notebooks/evaluate_segmentation.ipynb` (note that we use de Hausdorff distance at 95 % as implemented in https://github.com/deepmind/surface-distance).
+The concordance index used to evaluate task 2 and 3 is impemented in the function `concordance_index(event_times, predicted_scores, event_observed=None)` from the file `src/aicrowd_evaluator/survival_metrics.py`.
+Examples of correct submission for task 1 and 2 can be found in `notebooks/example_segmentation_submission.ipynb` and `notebooks/example_survival_submission.ipynb`respectively.
+
 
 Project Organization
 ------------
@@ -40,14 +39,14 @@ Project Organization
     │                                        generated with `pip freeze > requirements.txt`
     ├── Makefile                          <- Used to do set up the environment and make the conversion of DICOM to NIFTI
     ├── notebooks
-    │   └── evaluate_predictions.ipynb    <- Example of how the evaluation will be computed. This example use the output
+    |   ├── ...
+    │   └── evaluate_segmentation.ipynb    <- Example of how the evaluation will be computed. This example use the output
     |                                        of the NiftyNet model
     └── src                               <- Source code for use in this project
         ├── aicrowd_evaluator             <- Source code for the evaluation on the AIcrowd platform
         │   ├── __init__.py
         │   ├── surface-distance/         <- code to compute the robust Hausdorff distance availabe at https://github.com/deepmind/surface-distance        
-        │   ├── hecktor_seg_evaluator.py  <- Define the evaluator class to compute segmentation results
-        │   ├── hecktor_surv_evaluator.py <- Define the evaluator class to compute survival results
+        │   ├── evaluator.py              <- Define the evaluator class for task 1 and 2
         │   ├── segmentation_metrics.py   <- Define the metrics used in hecktor_seg_evaluator.py
         |   ├── requirements.txt          <- The requirements file specific to this submodule
         │   └── survival_metrics.py       <- Define the metrics used in hecktor_surv_evaluator.py
