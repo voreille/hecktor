@@ -23,7 +23,8 @@ Evaluate Results
 ------------
 An example of how the segmentation (task 1) will be evaluated is illustrated in the notebook `notebooks/evaluate_segmentation.ipynb` (note that we use de Hausdorff distance at 95 % as implemented in https://github.com/deepmind/surface-distance).
 The concordance index used to evaluate task 2 and 3 is impemented in the function `concordance_index(event_times, predicted_scores, event_observed=None)` from the file `src/aicrowd_evaluator/survival_metrics.py`.
-Examples of correct submission for task 1 and 2 can be found in `notebooks/example_segmentation_submission.ipynb` and `notebooks/example_survival_submission.ipynb`respectively.
+
+Dummy examples of correct submission for task 1 and 2 can be found in `notebooks/example_seg_submission.ipynb` and `notebooks/example_surv_submission.ipynb`respectively.
 
 
 Project Organization
@@ -39,8 +40,9 @@ Project Organization
     │                                        generated with `pip freeze > requirements.txt`
     ├── Makefile                          <- Used to do set up the environment and make the conversion of DICOM to NIFTI
     ├── notebooks
-    |   ├── ...
-    │   └── evaluate_segmentation.ipynb    <- Example of how the evaluation will be computed. This example use the output
+    |   ├── example_seg_submission.ipynb  <- Example of a correct submission for the segmentation task (task 1).
+    |   ├── example_surv_submission.ipynb <- Example of a correct submission for the survival task (task 2).
+    │   └── evaluate_segmentation.ipynb   <- Example of how the evaluation will be computed. This example use the output
     |                                        of the NiftyNet model
     └── src                               <- Source code for use in this project
         ├── aicrowd_evaluator             <- Source code for the evaluation on the AIcrowd platform
