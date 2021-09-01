@@ -42,8 +42,7 @@ Project Organization
     ├── notebooks
     |   ├── example_seg_submission.ipynb  <- Example of a correct submission for the segmentation task (task 1).
     |   ├── example_surv_submission.ipynb <- Example of a correct submission for the survival task (task 2).
-    │   └── evaluate_segmentation.ipynb   <- Example of how the evaluation will be computed. This example use the output
-    |                                        of the NiftyNet model
+    │   └── evaluate_segmentation.ipynb   <- Example of how the evaluation will be computed.
     └── src                               <- Source code for use in this project
         ├── aicrowd_evaluator             <- Source code for the evaluation on the AIcrowd platform
         │   ├── __init__.py
