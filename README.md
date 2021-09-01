@@ -59,8 +59,8 @@ Project Organization
         │   └── make_dataset.py           <- Conversion of the DICOM to NIFTI and computation of the bounding boxes
         ├── evaluation
         |   ├── __init__.py
-        │   ├── cli_compute_scores.py     <- Example of how the score will be computed
-        │   └── scores.py
+        │   └── scores.py                 <- (DEPRECATED) used to illustrate how the segmentation is evaluated. Refer to `src/aicrowd_evaluator`
+        |                                    submodule for the actual evaluation of the challenge.
         └── resampling                    <- Code to resample the data 
             ├── __init__.py
             └── resample.py
