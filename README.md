@@ -49,9 +49,9 @@ Project Organization
         │   ├── __init__.py
         │   ├── surface-distance/         <- code to compute the robust Hausdorff distance availabe at https://github.com/deepmind/surface-distance        
         │   ├── evaluator.py              <- Define the evaluator class for task 1 and 2
-        │   ├── segmentation_metrics.py   <- Define the metrics used in hecktor_seg_evaluator.py
+        │   ├── segmentation_metrics.py   <- Define the metrics used in the segmentation task.
         |   ├── requirements.txt          <- The requirements file specific to this submodule
-        │   └── survival_metrics.py       <- Define the metrics used in hecktor_surv_evaluator.py
+        │   └── survival_metrics.py       <- Define the metrics used for the survival task.
         ├── data                          <- Scripts to generate data
         │   ├── __init__.py
         │   ├── bounding_box.py        
