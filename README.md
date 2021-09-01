@@ -19,10 +19,11 @@ Resample Data
 ------------
 Run `python src/resampling/resample.py` to crop and resample the data following the repository structure or use arguments (type `python src/resamping/resample.py --help` for more informations).
 
-Evaluate Results
+Evaluation
 ------------
 An example of how the segmentation (task 1) will be evaluated is illustrated in the notebook `notebooks/evaluate_segmentation.ipynb`. Note that the Hausdorff distance at 95 % implemented in https://github.com/deepmind/surface-distance will be used in the challenge (not the one found in `src/evaluation/scores.py`).
-The concordance index used to evaluate task 2 and 3 is impemented in the function `concordance_index(event_times, predicted_scores, event_observed=None)` from the file `src/aicrowd_evaluator/survival_metrics.py`.
+
+The concordance index used to evaluate task 2 and 3 is implemented in the function `concordance_index(event_times, predicted_scores, event_observed=None)` from the file `src/aicrowd_evaluator/survival_metrics.py`. It was adapted from https://github.com/CamDavidsonPilon/lifelines/blob/master/lifelines/utils/concordance.py to account for missing predictions (missing predictions are handled as non-concordant).
 
 Submission
 ------------
