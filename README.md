@@ -24,6 +24,8 @@ Evaluate Results
 An example of how the segmentation (task 1) will be evaluated is illustrated in the notebook `notebooks/evaluate_segmentation.ipynb` (note that we use de Hausdorff distance at 95 % as implemented in https://github.com/deepmind/surface-distance).
 The concordance index used to evaluate task 2 and 3 is impemented in the function `concordance_index(event_times, predicted_scores, event_observed=None)` from the file `src/aicrowd_evaluator/survival_metrics.py`.
 
+Submission
+------------
 Dummy examples of correct submission for task 1 and 2 can be found in `notebooks/example_seg_submission.ipynb` and `notebooks/example_surv_submission.ipynb`respectively.
 
 
