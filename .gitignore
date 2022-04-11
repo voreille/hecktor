@@ -104,3 +104,5 @@ notebooks/hausdorff.ipynb
 notebooks/explo_dicom.ipynb
 notebooks/qc_params.yaml
 src/aicrowd_evaluator/data_aicrowd.zip
+Dockerfile
+.devcontainer/

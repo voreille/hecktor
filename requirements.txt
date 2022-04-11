@@ -10,4 +10,3 @@ pydicom
 simpleitk
 scikit-image
 jupyter
-
