@@ -17,10 +17,10 @@ from src.data.utils import (correct_names, move_extra_vois, clean_vois,
 
 project_dir = Path(__file__).resolve().parents[2]
 default_input_path = project_dir / "data/raw"
-default_images_folder = project_dir / "data/hecktor2021_2/hecktor_nii/"
+default_images_folder = project_dir / "data/hecktor2021/hecktor_nii/"
 default_files_folder = project_dir / "data/hecktor2021/"
 default_archive = project_dir / "data/extra_voi"
-default_name_mapping = project_dir / "data/hecktor2021/hecktor2021_name_mapping_training.csv"
+default_name_mapping = project_dir / "data/hecktor2021_name_mapping_testing.csv"
 default_bb_file = project_dir / "data/hecktor2021/hecktor2021_bbox_training.csv"
 
 
@@ -52,32 +52,32 @@ def main(input_folder, output_images_folder, output_files_folder, bb_file,
     output_images_folder = Path(output_images_folder)
     output_files_folder = Path(output_files_folder)
     archive_folder = Path(archive_folder)
-    output_images_folder.mkdir(exist_ok=True)
-    archive_folder.mkdir(exist_ok=True)
-    logger.info("Converting Dicom to Nifty - START")
-    converter = NiftiConverter(
-        padding="whole_image",
-        resampling_spacing=-1,
-        list_labels=["GTVt"],
-        cores=10,
-    )
-    _ = converter(input_folder, output_folder=output_images_folder)
+    output_images_folder.mkdir(exist_ok=True, parents=True)
+    archive_folder.mkdir(exist_ok=True, parents=True)
+    # logger.info("Converting Dicom to Nifty - START")
+    # converter = NiftiConverter(
+    #     padding="whole_image",
+    #     list_labels=["GTVt", "GTVn"],
+    #     cores=10,
+    #     naming=2,
+    # )
+    # _, _ = converter(input_folder, output_folder=output_images_folder)
 
     logger.info("Converting Dicom to Nifty - END")
-    logger.info("Removing extra VOI - START")
-    move_extra_vois(output_images_folder, archive_folder)
-    logger.info("Removing extra VOI - END")
-    logger.info("Renaming files- START")
-    correct_names(output_images_folder, name_mapping)
-    logger.info("Renaming files- END")
-    logger.info("Cleaning the VOIs - START")
+    # logger.info("Removing extra VOI - START")
+    # move_extra_vois(output_images_folder, archive_folder)
+    # logger.info("Removing extra VOI - END")
+    # logger.info("Renaming files- START")
+    # correct_names(output_images_folder, name_mapping)
+    # logger.info("Renaming files- END")
+    # logger.info("Cleaning the VOIs - START")
     clean_vois(output_images_folder)
     logger.info("Cleaning the VOIs - END")
 
-    logger.info("Computing the bounding boxes - START")
-    bb_df = compute_bbs(output_images_folder)
-    bb_df.to_csv(bb_file)
-    logger.info("Computing the bounding boxes - END")
+    # logger.info("Computing the bounding boxes - START")
+    # bb_df = compute_bbs(output_images_folder)
+    # bb_df.to_csv(bb_file)
+    # logger.info("Computing the bounding boxes - END")
 
 
 if __name__ == '__main__':

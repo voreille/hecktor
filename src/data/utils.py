@@ -36,38 +36,57 @@ def move_extra_vois(input_folder, archive_folder):
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
 
     for patient_id in patient_ids:
-        voi_files = [
-            f for f in Path(input_folder).rglob("*GTV*")
-            if patient_id == f.name.split("__")[0]
-        ]
-        if len(voi_files) == 0:
-            voi_files = [
-                f for f in Path(input_folder).rglob("*RTSTRUCT*")
-                if patient_id == f.name.split("__")[0]
-            ]
-            if len(voi_files) == 0:
-                warnings.warn(f"patient {patient_id} has no VOI")
-                continue
+        move_gtv_one_patient(input_folder,
+                             archive_folder,
+                             patient_id,
+                             label="GTVt")
+        move_gtv_one_patient(input_folder,
+                             archive_folder,
+                             patient_id,
+                             label="GTVn")
 
-        voi_datetimes = [
-            datetime.strptime(
-                f.name.split("__")[-1].split(".")[0], "%Y-%m-%d_%H-%M-%S")
-            for f in voi_files
-        ]
-        voi_files_dates = list(zip(voi_files, voi_datetimes))
-        voi_files_dates.sort(key=lambda x: x[1])
-        voi_to_keep = voi_files_dates[-1][0]
-        voi_to_move = [
-            f for f in Path(input_folder).rglob("*RTSTRUCT*")
-            if patient_id == f.name.split("__")[0] and f != voi_to_keep
-        ]
-        for f in voi_to_move:
-            move(f, archive_folder / f.name)
+
+def move_gtv_one_patient(input_folder,
+                         archive_folder,
+                         patient_id,
+                         label="GTVt"):
+    voi_files = [
+        f for f in Path(input_folder).rglob(f"*{label}*")
+        if patient_id == f.name.split("__")[0]
+    ]
+    # if len(voi_files) == 0:
+    # voi_files = [
+    #     f for f in Path(input_folder).rglob("*RTSTRUCT*")
+    #     if patient_id == f.name.split("__")[0]
+    # ]
+    # if len(voi_files) == 0:
+    #     warnings.warn(f"patient {patient_id} has no VOI")
+    #     continue
+    if len(voi_files) == 0:
+        warnings.warn(f"patient {patient_id} has no {label}")
+        return
+
+    voi_datetimes = [
+        datetime.strptime(
+            f.name.split("__")[-1].split(".")[0], "%Y-%m-%d_%H-%M-%S")
+        for f in voi_files
+    ]
+    voi_files_dates = list(zip(voi_files, voi_datetimes))
+    voi_files_dates.sort(key=lambda x: x[1])
+    voi_to_keep = voi_files_dates[-1][0]
+    voi_to_move = [
+        f for f in Path(input_folder).rglob("*RTSTRUCT*")
+        if patient_id == f.name.split("__")[0] and f != voi_to_keep
+    ]
+    for f in voi_to_move:
+        move(f, archive_folder / f.name)
 
 
 def correct_names(input_folder, mapping):
     input_folder = Path(input_folder)
     mapping_df = pd.read_csv(mapping)
+    mapping_df["dicom_id"] = mapping_df["dicom_id"].map(
+        lambda x: x.lstrip("P"))
     mapping_dict = {
         k: i
         for k, i in zip(list(mapping_df["dicom_id"]),
@@ -80,10 +99,18 @@ def correct_names(input_folder, mapping):
     for file in files:
         patient_id, modality = file.name.split("__")[:2]
         patient_id = patient_id.replace("_ORL", "")
-        if "GTV" in modality:
-            modality = "gtvt"
-        new_name = (mapping_dict[patient_id] + "_" + modality.lower() +
-                    ".nii.gz")
+
+        if patient_id.startswith("P"):
+            patient_id = patient_id[1:]
+        patient_id = patient_id.lstrip("0")
+        # if "GTV" in modality:
+        #     modality = "gtvt"
+        try:
+            new_name = (mapping_dict[patient_id] + "_" + modality.lower() +
+                        ".nii.gz")
+        except KeyError:
+            warnings.warn(f"{patient_id} not found in mapping")
+            continue
         file.rename(file.parent / new_name)
 
 
@@ -114,7 +141,7 @@ def remove_extra_components(mask, patient_id, threshold=0.01):
 
 def clean_vois(input_folder):
     input_folder = Path(input_folder)
-    for f in input_folder.rglob("*gtvt.nii.gz"):
+    for f in input_folder.rglob("*gtvn.nii.gz"):
         patient_id = f.name.split("_")[0]
         mask = sitk.ReadImage(str(f.resolve()))
         mask = remove_extra_components(mask, patient_id)
