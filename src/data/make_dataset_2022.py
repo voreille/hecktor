@@ -20,11 +20,14 @@ project_dir = Path(__file__).resolve().parents[2]
 # default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
 center = "CHUP_v2"
 # default_input_path = f"/mnt/nas4/datasets/ToReadme/HECKTOR/HECKTOR2022/dicom/{center}"
-default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
+# default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
+default_input_path = f"/run/media/val/IIG/valentin/hecktor2022/processed/{center}/"
 default_images_folder = project_dir / f"data/hecktor2022/processed/{center}/images"
-default_labels_original_folder = project_dir / f"data/hecktor2022/processed/{center}/labels_original"
+# default_labels_original_folder = project_dir / f"data/hecktor2022/processed/{center}/labels_original"
+default_labels_original_folder = f"/run/media/val/IIG/valentin/hecktor2022/processed/{center}/labels_original"
 default_labels_folder = project_dir / f"data/hecktor2022/processed/{center}/labels"
-default_dump = project_dir / f"data/hecktor2022/processed/{center}/dump"
+# default_dump = project_dir / f"data/hecktor2022/processed/{center}/dump"
+default_dump = f"/run/media/val/IIG/valentin/hecktor2022/processed/{center}/dump"
 default_name_mapping = project_dir / "data/hecktor2021_name_mapping_testing.csv"
 
 
@@ -89,7 +92,8 @@ def main(input_folder, output_images_folder, output_labels_folder,
     # sort_vois(output_images_folder, output_labels_original_folder, dump_folder)
     # logger.info("Removing extra VOI - END")
     logger.info("Combining all VOIs into one file - START")
-    combine_vois(output_labels_original_folder, output_labels_folder)
+    combine_vois(output_labels_original_folder, output_labels_folder,
+                 dump_folder)
     logger.info("Combining all VOIs into one file - END")
     # logger.info("Renaming files- START")
     # correct_names(output_images_folder, name_mapping)

@@ -18,7 +18,7 @@ logging.captureWarnings(True)
 logger = logging.getLogger(__name__)
 
 
-def get_datetime(s):
+def get_datetime_from_dcm(s):
     return datetime.strptime(s.SeriesDate + s.SeriesTime.split('.')[0],
                              "%Y%m%d%H%M%S")
 
@@ -47,7 +47,18 @@ def move_extra_vois(input_folder, archive_folder):
                              label="GTVn")
 
 
-def combine_vois(input_folder, output_folder):
+def find_missing_gtvt(patient_id, archive_folder, labels=None):
+    files = [
+        f for f in Path(archive_folder).rglob(f"{patient_id}__GTV*")
+        if f.name.split("__")[1] in labels
+    ]
+    files.sort(key=get_datetime_from_filename)
+    gtvt = files[-1]
+    logger.info("Found GTVt: {}".format(gtvt))
+    return 
+
+
+def combine_vois(input_folder, output_folder, archive_folder):
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
 
@@ -58,7 +69,17 @@ def combine_vois(input_folder, output_folder):
         gtvts = [f for f in input_folder.rglob(f"{patient_id}__GTVt*")]
         gtvns = [f for f in input_folder.rglob(f"{patient_id}__GTVn*")]
         if len(gtvts) == 0:
-            logger.error(f"No GTVt found for {patient_id}")
+            labels_fallback = ["GTV", "GTV_t", "GTVp"]
+            logger.warning(
+                f"No GTVt found for {patient_id}"
+                f", trying to find GTVt among the name {labels_fallback}")
+            try:
+                gtvts = [find_missing_gtvt(patient_id,
+                                  archive_folder,
+                                  labels=labels_fallback)]
+            except Exception as e:
+                logger.error(f"No GTVt found for {patient_id}")
+                continue
             continue
         mask = sitk.ReadImage(str(gtvts[0].resolve()))
         array = np.zeros_like(sitk.GetArrayFromImage(mask))
