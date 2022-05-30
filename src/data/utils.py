@@ -55,10 +55,20 @@ def find_missing_gtvt(patient_id, archive_folder, labels=None):
     files.sort(key=get_datetime_from_filename)
     gtvt = files[-1]
     logger.info("Found GTVt: {}".format(gtvt))
-    return 
+    return
 
 
-def combine_vois(input_folder, output_folder, archive_folder):
+def combine_vois(input_folder,
+                 output_folder,
+                 archive_folder,
+                 center="montreal"):
+    if "mda" in center:
+        _combine_vois_mda(input_folder, output_folder, archive_folder)
+    else:
+        _combine_vois(input_folder, output_folder, archive_folder)
+
+
+def _combine_vois(input_folder, output_folder, archive_folder):
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
 
@@ -74,9 +84,11 @@ def combine_vois(input_folder, output_folder, archive_folder):
                 f"No GTVt found for {patient_id}"
                 f", trying to find GTVt among the name {labels_fallback}")
             try:
-                gtvts = [find_missing_gtvt(patient_id,
-                                  archive_folder,
-                                  labels=labels_fallback)]
+                gtvts = [
+                    find_missing_gtvt(patient_id,
+                                      archive_folder,
+                                      labels=labels_fallback)
+                ]
             except Exception as e:
                 logger.error(f"No GTVt found for {patient_id}")
                 continue
@@ -98,7 +110,72 @@ def combine_vois(input_folder, output_folder, archive_folder):
         sitk.WriteImage(output, str(output_folder / f"{patient_id}.nii.gz"))
 
 
-def sort_vois(input_folder, output_folder, archive_folder):
+def _combine_vois_mda(input_folder, output_folder, archive_folder):
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    labels_gtvt = [
+        "GTVp", "GTVP", "GTV_P", "GTVp_KW", "GTV_7", "GTVp_YK", "GTVp_YK_SA",
+        "GTVp_KW_SA", "GTVp_SA", "GTV-P", "GTVp-YK", "GTVp2"
+    ]
+    labels_gtvn = [
+        "GTVn1", "GTV_N1", "GTVn2", "GTV_N2", "GTV_N7", "GTV_N6", "GTV_N4",
+        "GTV_N3", "GTV_N8", "GTV_N5", "GTVn3_SA", "GTVn1_SA", "GTVn2_SA",
+        "GTVn3", "GTVn5", "GTVn4", "GTVn4_SA", "GTVn9", "GTVn8", "GTVn6",
+        "GTVn7", "GTNn2", "GTVn01", "GTVn13", "GTVn14", "GTVn10", "GTVn12",
+        "GTVn15", "GTVn11", "GTVn5_SA", "GTVn6_SA", "GTV_N10", "GTV_N11",
+        "GTV_N9", "GTV_N_1", "GTV_N_2"
+    ]
+
+    patient_ids = list(
+        set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
+
+    for patient_id in tqdm(patient_ids):
+        gtvs = [f for f in input_folder.rglob(f"{patient_id}__*")]
+        gtvts = [f for f in gtvs if f.name.split("__")[1] in labels_gtvt]
+        gtvns = [f for f in gtvs if f.name.split("__")[1] in labels_gtvn]
+        if len(gtvts) == 0:
+            logger.warning(f"No GTVt found for {patient_id}")
+            mask = sitk.ReadImage(str(gtvns[0].resolve()))
+            array = np.zeros_like(sitk.GetArrayFromImage(mask))
+            array_gtvn = np.zeros_like(sitk.GetArrayFromImage(mask))
+            for voi in gtvns:
+                array_gtvn += sitk.GetArrayFromImage(
+                    sitk.ReadImage(str(voi.resolve())))
+            array[array != 0] = 1
+            array[array_gtvn != 0] = 2
+            output = sitk.GetImageFromArray(array)
+            output.SetSpacing(mask.GetSpacing())
+            output.SetDirection(mask.GetDirection())
+            output.SetOrigin(mask.GetOrigin())
+            sitk.WriteImage(output,
+                            str(output_folder / f"{patient_id}.nii.gz"))
+            continue
+
+        mask = sitk.ReadImage(str(gtvts[0].resolve()))
+        array = np.zeros_like(sitk.GetArrayFromImage(mask))
+        for voi in gtvts:
+            array += sitk.GetArrayFromImage(sitk.ReadImage(str(voi.resolve())))
+        array_gtvn = np.zeros_like(sitk.GetArrayFromImage(mask))
+        for voi in gtvns:
+            array_gtvn += sitk.GetArrayFromImage(
+                sitk.ReadImage(str(voi.resolve())))
+        array[array != 0] = 1
+        array[array_gtvn != 0] = 2
+        output = sitk.GetImageFromArray(array)
+        output.SetSpacing(mask.GetSpacing())
+        output.SetDirection(mask.GetDirection())
+        output.SetOrigin(mask.GetOrigin())
+        sitk.WriteImage(output, str(output_folder / f"{patient_id}.nii.gz"))
+
+
+def sort_vois(input_folder, output_folder, archive_folder, center="montreal"):
+    if "mda" in center:
+        _sort_vois_mda(input_folder, output_folder, archive_folder)
+    else:
+        _sort_vois(input_folder, output_folder, archive_folder)
+
+
+def _sort_vois(input_folder, output_folder, archive_folder):
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     archive_folder = Path(archive_folder)
@@ -118,12 +195,30 @@ def sort_vois(input_folder, output_folder, archive_folder):
             for f in input_folder.rglob(f"{patient_id}__GTV*")
             if "GTVn" in f.name or "GTVt" in f.name
         ])
+        if len({"GTVn01", "GTVn1"}.intersection(labels)) > 0:
+            labels = [label for label in labels if label != "GTVn"]
         for label in labels:
             move_gtv_one_patient(input_folder,
                                  output_folder,
                                  archive_folder,
                                  patient_id,
                                  label=label)
+
+    voi_files_to_move = [f for f in Path(input_folder).rglob("*RTSTRUCT*")]
+    for f in voi_files_to_move:
+        move(f, archive_folder / f.name)
+
+
+def _sort_vois_mda(input_folder, output_folder, archive_folder):
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    archive_folder = Path(archive_folder)
+    voi_files_to_move = [
+        f for f in Path(input_folder).rglob("*RTSTRUCT*")
+        if "PT" in f.name or ")" in f.name
+    ]
+    for f in voi_files_to_move:
+        move(f, archive_folder / f.name)
 
 
 def move_gtv_one_patient(input_folder,
@@ -133,8 +228,8 @@ def move_gtv_one_patient(input_folder,
                          label="GTVt"):
     vois = [f for f in input_folder.rglob(f"{patient_id}__{label}__*")]
     vois.sort(key=get_datetime_from_filename)
-    for gtvt in vois[:-1]:
-        move(gtvt, archive_folder / gtvt.name)
+    for voi in vois[:-1]:
+        move(voi, archive_folder / voi.name)
 
     move(vois[-1], output_folder / vois[-1].name)
 
