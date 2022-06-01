@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from shutil import move
+import shutil
 import warnings
 import logging
 
@@ -31,7 +31,7 @@ def move_extra_vois(input_folder, archive_folder):
         if "PT" in f.name or ")." in f.name
     ]
     for f in voi_files:
-        move(f, archive_folder / f.name)
+        shutil.move(f, archive_folder / f.name)
 
     patient_ids = list(
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
@@ -184,7 +184,7 @@ def _sort_vois(input_folder, output_folder, archive_folder):
         if "PT" in f.name or ")." in f.name
     ]
     for f in voi_files_to_move:
-        move(f, archive_folder / f.name)
+        shutil.move(f, archive_folder / f.name)
 
     patient_ids = list(
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
@@ -206,7 +206,7 @@ def _sort_vois(input_folder, output_folder, archive_folder):
 
     voi_files_to_move = [f for f in Path(input_folder).rglob("*RTSTRUCT*")]
     for f in voi_files_to_move:
-        move(f, archive_folder / f.name)
+        shutil.move(f, archive_folder / f.name)
 
 
 def _sort_vois_mda(input_folder, output_folder, archive_folder):
@@ -218,7 +218,7 @@ def _sort_vois_mda(input_folder, output_folder, archive_folder):
         if "PT" in f.name or ")" in f.name
     ]
     for f in voi_files_to_move:
-        move(f, archive_folder / f.name)
+        shutil.move(f, archive_folder / f.name)
 
 
 def move_gtv_one_patient(input_folder,
@@ -229,9 +229,9 @@ def move_gtv_one_patient(input_folder,
     vois = [f for f in input_folder.rglob(f"{patient_id}__{label}__*")]
     vois.sort(key=get_datetime_from_filename)
     for voi in vois[:-1]:
-        move(voi, archive_folder / voi.name)
+        shutil.move(voi, archive_folder / voi.name)
 
-    move(vois[-1], output_folder / vois[-1].name)
+    shutil.move(vois[-1], output_folder / vois[-1].name)
 
 
 def get_datetime_from_filename(file):
@@ -272,10 +272,60 @@ def move_gtv_one_patient_old(input_folder,
         if patient_id == f.name.split("__")[0] and f != voi_to_keep
     ]
     for f in voi_to_move:
-        move(f, archive_folder / f.name)
+        shutil.move(f, archive_folder / f.name)
 
 
-def correct_names(input_folder, mapping):
+def correct_names(input_folder, output_folder, mapping, center="montreal"):
+    if "chuv" in center.lower():
+        _correct_names_chuv(input_folder, output_folder, mapping)
+    if "montreal" in center.lower():
+        _correct_names_montreal(input_folder, output_folder)
+    else:
+        _correct_names(input_folder, output_folder, mapping)
+
+
+def _correct_names(input_folder, output_folder, mapping):
+    input_folder = Path(input_folder)
+    mapping_df = pd.read_csv(mapping)
+    mapping_df.dicom_id = mapping_df.dicom_id.astype(str)
+    mapping_df.hecktor_id = mapping_df.hecktor_id.astype(str)
+
+    files = [f for f in input_folder.rglob("*.nii.gz")]
+    for file in files:
+        patient_id = file.name.split("__")[0].split(".")[0]
+        try:
+            new_patient_id = mapping_df.loc[mapping_df.dicom_id == patient_id,
+                                            "hecktor_id"].values[0]
+        except KeyError:
+            warnings.warn(f"{patient_id} not found in mapping")
+            continue
+        if "CT" in file.name or "PT" in file.name:
+            modality = file.name.split("__")[1]
+            new_name = f"{new_patient_id}__{modality}.nii.gz"
+        else:
+            new_name = f"{new_patient_id}.nii.gz"
+
+        shutil.copy(file, output_folder / new_name)
+
+
+def _correct_names_montreal(input_folder, output_folder):
+    input_folder = Path(input_folder)
+
+    files = [f for f in input_folder.rglob("*.nii.gz")]
+    for file in files:
+        patient_id = file.name.split("__")[0].split(".")[0]
+        new_patient_id = patient_id.lstrip("HN-")
+
+        if "CT" in file.name or "PT" in file.name:
+            modality = file.name.split("__")[1]
+            new_name = f"{new_patient_id}__{modality}.nii.gz"
+        else:
+            new_name = f"{new_patient_id}.nii.gz"
+
+        shutil.copy(file, output_folder / new_name)
+
+
+def _correct_names_chuv(input_folder, mapping):
     input_folder = Path(input_folder)
     mapping_df = pd.read_csv(mapping)
     mapping_df["dicom_id"] = mapping_df["dicom_id"].map(

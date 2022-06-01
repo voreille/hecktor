@@ -18,18 +18,15 @@ from src.data.utils import (correct_names, sort_vois, combine_vois, clean_vois,
                             compute_bbs)
 
 project_dir = Path(__file__).resolve().parents[2]
+data_dir = Path("/run/media/val/083C23E228226C35/work/hecktor2022/processed/")
 # default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
-center = "mda_test"
-# default_input_path = f"/mnt/nas4/datasets/ToReadme/HECKTOR/HECKTOR2022/dicom/{center}"
+center = "montreal"
 default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
-# default_input_path = f"/run/media/val/IIG/valentin/hecktor2022/processed/{center}/"
-default_images_folder = project_dir / f"data/hecktor2022/processed/{center}/images"
-default_labels_original_folder = project_dir / f"data/hecktor2022/processed/{center}/labels_original"
-# default_labels_original_folder = f"/run/media/val/IIG/valentin/hecktor2022/processed/{center}/labels_original"
-default_labels_folder = project_dir / f"data/hecktor2022/processed/{center}/labels"
-default_dump = project_dir / f"data/hecktor2022/processed/{center}/dump"
-# default_dump = f"/run/media/val/IIG/valentin/hecktor2022/processed/{center}/dump"
-default_name_mapping = project_dir / "data/hecktor2021_name_mapping_testing.csv"
+default_images_folder = data_dir / f"{center}/images"
+default_labels_original_folder = data_dir / f"{center}/labels_original"
+default_labels_folder = data_dir / f"{center}/labels"
+default_dump = data_dir / f"{center}/dump"
+default_name_mapping = data_dir / f"{center}/name_mapping_hecktor2022.csv"
 
 
 def filter_func(study):
@@ -94,21 +91,26 @@ def main(input_folder, output_images_folder, output_labels_folder,
     # ]
     # print(f"List of patients with errors: {list_errors}")
     # logger.info("Converting Dicom to Nifty - END")
-    logger.info("Removing extra VOI - START")
-    sort_vois(output_images_folder,
-              output_labels_original_folder,
-              dump_folder,
-              center=center)
-    logger.info("Removing extra VOI - END")
-    logger.info("Combining all VOIs into one file - START")
-    combine_vois(output_labels_original_folder,
-                 output_labels_folder,
-                 dump_folder,
-                 center=center)
-    logger.info("Combining all VOIs into one file - END")
-    # logger.info("Renaming files- START")
-    # correct_names(output_images_folder, name_mapping)
-    # logger.info("Renaming files- END")
+    # logger.info("Removing extra VOI - START")
+    # sort_vois(output_images_folder,
+    #           output_labels_original_folder,
+    #           dump_folder,
+    #           center=center)
+    # logger.info("Removing extra VOI - END")
+    # logger.info("Combining all VOIs into one file - START")
+    # combine_vois(output_labels_original_folder,
+    #              output_labels_folder,
+    #              dump_folder,
+    #              center=center)
+    # logger.info("Combining all VOIs into one file - END")
+    logger.info("Renaming files- START")
+    image_renamed_folder = output_images_folder.parent / "images_renamed"
+    image_renamed_folder.mkdir(exist_ok=True, parents=False)
+    correct_names(output_images_folder, image_renamed_folder, name_mapping)
+    label_renamed_folder = output_images_folder.parent / "labels_renamed"
+    label_renamed_folder.mkdir(exist_ok=True, parents=False)
+    correct_names(output_labels_folder, label_renamed_folder, name_mapping)
+    logger.info("Renaming files- END")
     # logger.info("Cleaning the VOIs - START")
     # clean_vois(output_images_folder)
     # logger.info("Cleaning the VOIs - END")
