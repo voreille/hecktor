@@ -193,7 +193,8 @@ def _sort_vois_chup(input_folder, output_folder, archive_folder):
 
     for patient_id in patient_ids:
         labels = set([
-            f.name.split("__")[1] for f in input_folder.rglob(f"{patient_id}*")
+            f.name.split("__")[1]
+            for f in input_folder.rglob(f"{patient_id}__*RTSTRUCT*")
         ])
         for label in labels:
             move_gtv_one_patient(input_folder,
