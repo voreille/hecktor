@@ -171,8 +171,40 @@ def _combine_vois_mda(input_folder, output_folder, archive_folder):
 def sort_vois(input_folder, output_folder, archive_folder, center="montreal"):
     if "mda" in center:
         _sort_vois_mda(input_folder, output_folder, archive_folder)
+    elif "chup" in center.lower():
+        _sort_vois_chup(input_folder, output_folder, archive_folder)
     else:
         _sort_vois(input_folder, output_folder, archive_folder)
+
+
+def _sort_vois_chup(input_folder, output_folder, archive_folder):
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    archive_folder = Path(archive_folder)
+    voi_files_to_move = [
+        f for f in Path(input_folder).rglob("*RTSTRUCT*")
+        if "PT" in f.name or ")." in f.name
+    ]
+    for f in voi_files_to_move:
+        shutil.move(f, archive_folder / f.name)
+
+    patient_ids = list(
+        set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
+
+    for patient_id in patient_ids:
+        labels = set([
+            f.name.split("__")[1] for f in input_folder.rglob(f"{patient_id}*")
+        ])
+        for label in labels:
+            move_gtv_one_patient(input_folder,
+                                 output_folder,
+                                 archive_folder,
+                                 patient_id,
+                                 label=label)
+
+    voi_files_to_move = [f for f in Path(input_folder).rglob("*RTSTRUCT*")]
+    for f in voi_files_to_move:
+        shutil.move(f, archive_folder / f.name)
 
 
 def _sort_vois(input_folder, output_folder, archive_folder):
