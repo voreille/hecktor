@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import logging
 
 logging.basicConfig(
@@ -22,13 +23,20 @@ project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/processed/"
 
 # default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
-center = "CHUP_v3"
+center = "CHUV"
 default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
 default_images_folder = data_dir / f"{center}/images"
 default_labels_original_folder = data_dir / f"{center}/labels_original"
 default_labels_folder = data_dir / f"{center}/labels"
 default_dump = data_dir / f"{center}/dump"
-default_name_mapping = data_dir / f"{center}/name_mapping_hecktor2022.csv"
+default_name_mapping = data_dir / f"{center}/name_mapping.csv"
+voi_mapping = data_dir / f"{center}/vois_mapping.json"
+
+if voi_mapping.exists():
+    with open(voi_mapping, "r") as f:
+        voi_mapping = json.load(f)
+else:
+    voi_mapping = None
 
 
 def filter_func(study):
@@ -92,30 +100,38 @@ def main(input_folder, output_images_folder, output_labels_folder,
     #     if d.get("status") == "failed"
     # ]
     # print(f"List of patients with errors: {list_errors}")
-    logger.info("Converting Dicom to Nifty - END")
+    # logger.info("Converting Dicom to Nifty - END")
     logger.info("Removing extra VOI - START")
     sort_vois(output_images_folder,
               output_labels_original_folder,
               dump_folder,
-              center=center)
+              center=center,
+              voi_mapping=voi_mapping)
     logger.info("Removing extra VOI - END")
-    # logger.info("Combining all VOIs into one file - START")
-    # combine_vois(output_labels_original_folder,
-    #              output_labels_folder,
-    #              dump_folder,
-    #              center=center)
-    # logger.info("Combining all VOIs into one file - END")
-    # logger.info("Renaming files- START")
-    # image_renamed_folder = output_images_folder.parent / "images_renamed"
-    # image_renamed_folder.mkdir(exist_ok=True, parents=False)
-    # correct_names(output_images_folder, image_renamed_folder, name_mapping)
-    # label_renamed_folder = output_images_folder.parent / "labels_renamed"
-    # label_renamed_folder.mkdir(exist_ok=True, parents=False)
-    # correct_names(output_labels_folder, label_renamed_folder, name_mapping)
-    # logger.info("Renaming files- END")
-    # logger.info("Cleaning the VOIs - START")
-    # clean_vois(output_images_folder)
-    # logger.info("Cleaning the VOIs - END")
+    logger.info("Combining all VOIs into one file - START")
+    combine_vois(output_labels_original_folder,
+                 output_labels_folder,
+                 dump_folder,
+                 center=center,
+                 voi_mapping=voi_mapping)
+    logger.info("Combining all VOIs into one file - END")
+    logger.info("Renaming files- START")
+    image_renamed_folder = output_images_folder.parent / "images_renamed"
+    image_renamed_folder.mkdir(exist_ok=True, parents=False)
+    correct_names(output_images_folder,
+                  image_renamed_folder,
+                  name_mapping,
+                  center=center)
+    label_renamed_folder = output_images_folder.parent / "labels_renamed"
+    label_renamed_folder.mkdir(exist_ok=True, parents=False)
+    correct_names(output_labels_folder,
+                  label_renamed_folder,
+                  name_mapping,
+                  center=center)
+    logger.info("Renaming files- END")
+    logger.info("Cleaning the VOIs - START")
+    clean_vois(output_images_folder)
+    logger.info("Cleaning the VOIs - END")
 
 
 class DicomWalkerWithFilter(DicomWalker):

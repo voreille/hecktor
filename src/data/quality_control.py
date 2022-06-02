@@ -9,11 +9,11 @@ import SimpleITK as sitk
 from tqdm import tqdm
 from radiomics.featureextractor import RadiomicsFeatureExtractor
 
+center = "mda_test"
 project_dir = Path(__file__).resolve().parents[2]
-data_dir = Path(
-    "/run/media/val/083C23E228226C35/work/hecktor2022/processed/mda_test")
+data_dir = project_dir / "data/hecktor2022/processed/"
 
-default_input_folder = data_dir
+default_input_folder = data_dir / f"{center}/"
 default_output_path = project_dir / "data/hecktor2022/qc.csv"
 
 
@@ -52,58 +52,56 @@ class PatientProcessor():
     def _clean_pyradiomics_outptut(self, output):
         return {k: v for k, v in output.items() if "iagnos" not in k}
 
-    def _append_results(
-        self,
-        patient_id,
-        features,
-        results,
-        modality="CT",
-        voi="GTVp",
-    ):
-        features = self._clean_pyradiomics_outptut(features)
+    def _append_results(self, *, patient_id, output_pyradiomics, results,
+                        modality, voi):
+        output_pyradiomics = self._clean_pyradiomics_outptut(
+            output_pyradiomics)
         results = results.append(
             {
                 "patient_id": patient_id,
                 "VOI": voi,
                 "modality": modality,
-                **features
+                **output_pyradiomics
             },
             ignore_index=True)
         return results
 
     def __call__(self, patient_id):
-        ct_paths = [
-            f for f in self.input_folder.rglob(
-                f"*images_renamed/{patient_id}__CT*")
-        ]
-        pt_paths = [
-            f for f in self.input_folder.rglob(
-                f"*images_renamed/{patient_id}__PT*")
+        image_paths = [
+            f
+            for f in self.input_folder.rglob(f"*images_renamed/{patient_id}*")
         ]
         mask_paths = [
             f
             for f in self.input_folder.rglob(f"*labels_renamed/{patient_id}*")
         ]
-        ct = sitk.ReadImage(str(ct_paths[0]))
-        pt = sitk.ReadImage(str(pt_paths[0]))
         mask = sitk.ReadImage(str(mask_paths[0]))
 
-        self.resampler.SetOutputSpacing(ct.GetSpacing())
-        self.resampler.SetOutputDirection(ct.GetDirection())
-        pt = self.resampler.Execute(pt)
+        self.resampler.SetOutputSpacing(mask.GetSpacing())
+        self.resampler.SetOutputDirection(mask.GetDirection())
+        self.resampler.SetOutputOrigin(mask.GetOrigin())
+        self.resampler.SetSize(mask.GetSize())
+        images = [{
+            "image": self.resampler.Execute(sitk.ReadImage(str(f))),
+            "modality": f.name.split("__")[1]
+        } for f in image_paths]
 
+        mask_array = sitk.GetArrayFromImage(mask)
         results = pd.DataFrame()
-        images = {"PT": pt, "CT": ct}
-        vois_label = {"GTVp": 1, "GTVt": 2}
-        for modality, voi in product(["PT", "CT"], ["GTVp", "GTVt"]):
+        vois_label = {"GTVt": 1, "GTVt": 2}
+        for voi, image_ in product(vois_label.keys(), images):
+            if np.sum(mask_array == vois_label[voi]) == 0:
+                continue
+            image = image_["image"]
+            modality = image_["modality"]
             results = self._append_results(
-                patient_id,
-                self.featureextractor.execute(
-                    images[modality],
+                patient_id=patient_id,
+                output_pyradiomics=self.featureextractor.execute(
+                    image,
                     mask,
                     label=vois_label[voi],
                 ),
-                results,
+                results=results,
                 modality=modality,
                 voi=voi,
             )
