@@ -16,14 +16,14 @@ from okapy.dicomconverter.converter import NiftiConverter
 from okapy.dicomconverter.dicom_walker import DicomWalker
 
 from src.data.utils import (correct_names, sort_vois, combine_vois, clean_vois,
-                            compute_bbs)
+                            correct_images_direction, compute_bbs)
 
 project_dir = Path(__file__).resolve().parents[2]
 # data_dir = Path("/run/media/val/083C23E228226C35/work/hecktor2022/processed/")
 data_dir = project_dir / "data/hecktor2022/processed/"
 
 # default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
-center = "CHUV"
+center = "mda_test"
 default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
 default_images_folder = data_dir / f"{center}/images"
 default_labels_original_folder = data_dir / f"{center}/labels_original"
@@ -78,11 +78,18 @@ def main(input_folder, output_images_folder, output_labels_folder,
     output_labels_folder.mkdir(exist_ok=True, parents=True)
     output_labels_original_folder.mkdir(exist_ok=True, parents=True)
     dump_folder.mkdir(exist_ok=True, parents=True)
-    logger.info("Converting Dicom to Nifty - START")
-    if center == "montreal":
-        labels_startswith = "GTV"
-    else:
-        labels_startswith = None
+
+    image_renamed_folder = output_images_folder.parent / "images_renamed"
+    image_renamed_folder.mkdir(exist_ok=True, parents=False)
+
+    label_renamed_folder = output_images_folder.parent / "labels_renamed"
+    label_renamed_folder.mkdir(exist_ok=True, parents=False)
+
+    # logger.info("Converting Dicom to Nifty - START")
+    # if center == "montreal":
+    #     labels_startswith = "GTV"
+    # else:
+    #     labels_startswith = None
 
     # converter = NiftiConverter(
     #     padding="whole_image",
@@ -101,36 +108,35 @@ def main(input_folder, output_images_folder, output_labels_folder,
     # ]
     # print(f"List of patients with errors: {list_errors}")
     # logger.info("Converting Dicom to Nifty - END")
-    logger.info("Removing extra VOI - START")
-    sort_vois(output_images_folder,
-              output_labels_original_folder,
-              dump_folder,
-              center=center,
-              voi_mapping=voi_mapping)
-    logger.info("Removing extra VOI - END")
-    logger.info("Combining all VOIs into one file - START")
-    combine_vois(output_labels_original_folder,
-                 output_labels_folder,
-                 dump_folder,
-                 center=center,
-                 voi_mapping=voi_mapping)
-    logger.info("Combining all VOIs into one file - END")
-    logger.info("Renaming files- START")
-    image_renamed_folder = output_images_folder.parent / "images_renamed"
-    image_renamed_folder.mkdir(exist_ok=True, parents=False)
-    correct_names(output_images_folder,
-                  image_renamed_folder,
-                  name_mapping,
-                  center=center)
-    label_renamed_folder = output_images_folder.parent / "labels_renamed"
-    label_renamed_folder.mkdir(exist_ok=True, parents=False)
-    correct_names(output_labels_folder,
-                  label_renamed_folder,
-                  name_mapping,
-                  center=center)
-    logger.info("Renaming files- END")
+    # logger.info("Removing extra VOI - START")
+    # sort_vois(output_images_folder,
+    #           output_labels_original_folder,
+    #           dump_folder,
+    #           center=center,
+    #           voi_mapping=voi_mapping)
+    # logger.info("Removing extra VOI - END")
+    # logger.info("Combining all VOIs into one file - START")
+    # combine_vois(output_labels_original_folder,
+    #              output_labels_folder,
+    #              dump_folder,
+    #              center=center,
+    #              voi_mapping=voi_mapping)
+    # logger.info("Combining all VOIs into one file - END")
+    # logger.info("Renaming files- START")
+    # correct_names(output_images_folder,
+    #               image_renamed_folder,
+    #               name_mapping,
+    #               center=center)
+    # correct_names(output_labels_folder,
+    #               label_renamed_folder,
+    #               name_mapping,
+    #               center=center)
+    # logger.info("Renaming files- END")
     logger.info("Cleaning the VOIs - START")
-    clean_vois(output_images_folder)
+    clean_vois(label_renamed_folder)
+    logger.info("Cleaning the VOIs - END")
+    logger.info("Cleaning the VOIs - START")
+    correct_images_direction(image_renamed_folder, label_renamed_folder)
     logger.info("Cleaning the VOIs - END")
 
 

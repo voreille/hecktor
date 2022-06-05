@@ -7,8 +7,9 @@ import logging
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
-from scipy.ndimage.measurements import label
+from scipy.ndimage.measurements import label as cc_label
 import SimpleITK as sitk
+from scipy.ndimage import affine_transform
 
 from src.data.bounding_box import bbox_auto
 
@@ -458,7 +459,7 @@ def _correct_names_montreal(input_folder, output_folder):
     files = [f for f in input_folder.rglob("*.nii.gz")]
     for file in files:
         patient_id = file.name.split("__")[0].split(".")[0]
-        new_patient_id = patient_id.lstrip("HN-")
+        new_patient_id = patient_id[3:]
 
         if "CT" in file.name or "PT" in file.name:
             modality = file.name.split("__")[1]
@@ -501,37 +502,129 @@ def _correct_names_chuv(input_folder, mapping):
         file.rename(file.parent / new_name)
 
 
-def remove_extra_components(mask, patient_id, threshold=0.01):
-    array = sitk.GetArrayFromImage(mask)
-    array_label, num_features = label(array)
-    if num_features > 1:
-        total_n_vox = int(np.sum(array))
-        components = np.array(list(range(1, num_features + 1)))
-        volumes = np.array([np.sum(array_label == n) for n in components])
-        components_to_keep = components[volumes > threshold * total_n_vox]
-        array = np.zeros_like(array)
-        for c in components_to_keep:
-            array += (array_label == c).astype(np.uint8)
-        final_n_vox = int(np.sum(array))
-        logger.warning(f"GTVt for patient {patient_id} "
-                       f"has multiple components, keeping"
-                       f"only the largest, total_voxels: {total_n_vox}"
-                       f" -> final_voxels: {final_n_vox}")
-        output = sitk.GetImageFromArray(array)
-        output.SetDirection(mask.GetDirection())
-        output.SetOrigin(mask.GetOrigin())
-        output.SetSpacing(mask.GetSpacing())
-        return output
-    else:
+def remove_extra_components(
+    mask,
+    patient_id,
+    threshold=50,
+    label=1,
+):
+    array_output = sitk.GetArrayFromImage(mask)
+    array = (array_output == label).astype(np.uint8)
+    array_output[array_output == label] = 0
+    if np.sum(array) == 0:
         return mask
+
+    labels_dict = {1: "GTVp", 2: "GTVn"}
+    voxel_volume = np.prod(mask.GetSpacing())
+    array_label, num_features = cc_label(array, structure=np.ones((3, 3, 3)))
+    volume_initial = int(np.sum(array)) * voxel_volume
+    components = np.array(list(range(1, num_features + 1)))
+    volumes = np.array(
+        [np.sum(array_label == n) * voxel_volume for n in components])
+    mono_slice = np.array(
+        [np.max(np.sum(array_label == n, axis=0)) == 1 for n in components])
+
+    if num_features > 1:
+        logger.info(
+            f"VOI {labels_dict[label]} for {patient_id} has {num_features} components"
+            f" the smallest one has a volume of {np.min(volumes):0.2f} [mm3], "
+            f"and {np.count_nonzero(mono_slice)} components are one only one slice"
+        )
+    components_to_keep = components[(volumes > threshold)
+                                    & np.logical_not(mono_slice)]
+    array = np.zeros_like(array)
+    for c in components_to_keep:
+        array += (array_label == c).astype(np.uint8)
+    volume_final = int(np.sum(array)) * voxel_volume
+    if volume_initial != volume_final:
+        logger.warning(f"VOI {labels_dict[label]} for patient {patient_id} "
+                       f"was corrected."
+                       f" Volume initial: {volume_initial} [mm3]"
+                       f" -> final total volume: {volume_final} [mm3]")
+    array_output[array != 0] = label
+    array_output = array_output.astype(np.uint8)
+    output = sitk.GetImageFromArray(array_output)
+    output.SetDirection(mask.GetDirection())
+    output.SetOrigin(mask.GetOrigin())
+    output.SetSpacing(mask.GetSpacing())
+    return output
+
+
+def correct_images_direction(image_folder, mask_folder):
+    image_folder = Path(image_folder)
+    files = [
+        f for f in mask_folder.rglob("*.nii.gz")
+        if "_corrected" in f.name and "MDA-075" in f.name
+    ]
+    for f in tqdm(files):
+        mask = sitk.ReadImage(str(f))
+        patient_id = f.name.split(".")[0].strip("_corrected")
+        if mask.GetDirection() == (1, 0, 0, 0, 1, 0, 0, 0, 1):
+            continue
+        mask = correct_direction(mask)
+        images_path = [p for p in image_folder.rglob(patient_id + "*")]
+        for image_path in images_path:
+            image = sitk.ReadImage(str(image_path))
+            image = correct_direction(image)
+            output_path = image_folder / (image_path.name.split(".")[0] +
+                                          "_corrected.nii.gz")
+            sitk.WriteImage(image, str(output_path))
+        output_path = mask_folder / (patient_id + "_corrected.nii.gz")
+        sitk.WriteImage(mask, str(output_path))
+
+
+def correct_direction(image):
+    if image.GetDirection() == (1, 0, 0, 0, 1, 0, 0, 0, 1):
+        return image
+    array = np.transpose(sitk.GetArrayFromImage(image), (2, 1, 0))
+    direction = np.reshape(np.array(image.GetDirection()), [3, 3])
+    spacing = np.array(image.GetSpacing())
+    origin = np.array(image.GetOrigin())
+    coordinate_matrix = np.zeros((4, 4))
+    coordinate_matrix[:3, :3] = direction * spacing
+    coordinate_matrix[:3, 3] = origin
+    coordinate_matrix[3, 3] = 1
+
+    new_origin = np.zeros((3, ))
+    for k in range(3):
+        if direction[k, k] < 1:
+            new_origin[k] = -array.shape[k] * spacing[k] + origin[k]
+        else:
+            new_origin[k] = origin[k]
+    corrected_matrix = np.zeros((4, 4))
+    corrected_matrix[:3, :3] = np.eye(3) * spacing
+    corrected_matrix[:3, 3] = new_origin
+    corrected_matrix[3, 3] = 1
+    matrix = np.linalg.inv(coordinate_matrix) @ corrected_matrix
+    # matrix = np.linalg.inv(corrected_matrix) @ coordinate_matrix
+    array = affine_transform(
+        array,
+        matrix=matrix[:3, :3],
+        output_shape=array.shape,
+        offset=matrix[:3, 3],
+        order=1,
+        mode="nearest",
+    )
+    array = np.transpose(array, (2, 1, 0))
+    output_image = sitk.GetImageFromArray(array)
+    output_image.SetOrigin(image.GetOrigin())
+    output_image.SetSpacing(image.GetSpacing())
+    return output_image
 
 
 def clean_vois(input_folder):
     input_folder = Path(input_folder)
-    for f in input_folder.rglob("*gtvn.nii.gz"):
-        patient_id = f.name.split("_")[0]
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetOutputSpacing((1, 1, 1))
+    files = [
+        f for f in input_folder.rglob("*.nii.gz") if not "_corrected" in f.name
+        if "MDA-075" in f.name
+    ]
+    for f in tqdm(files):
+        patient_id = f.name.split(".")[0]
         mask = sitk.ReadImage(str(f.resolve()))
-        mask = remove_extra_components(mask, patient_id)
+        mask = remove_extra_components(mask, patient_id, label=1)
+        mask = remove_extra_components(mask, patient_id, label=2)
         filepath = str((f.parent / (f.name.split(".")[0] + "_corrected" +
                                     "".join(f.suffixes))).resolve())
         sitk.WriteImage(mask, filepath)
