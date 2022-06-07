@@ -1,4 +1,4 @@
-HECKTOR 2021 challenge
+HECKTOR 2021 challenge WATCH OUT, this version is not updated yet for the 2022 edition
 ==============================
 
 This repository gives an example on how to preprocess the data of the HECKTOR challenge. Any other preprocessing is welcomed and any framework can be used for the challenge, the only requirement is to submit the results in the same coordinate system as the original CT images (same spacing and same origin). This repository also contains the code used to prepare the data of the challenge (DICOM to NIFTI, SUV computation and bounding box generation, not needed for the participants). Moreover, it contains an example of implementation to resample the data within the bounding boxes and resample back to the original resolution.
