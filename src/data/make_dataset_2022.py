@@ -23,7 +23,7 @@ project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/processed/"
 
 # default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
-center = "mda_test"
+center = "mda_test_corrected_v2"
 default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
 default_images_folder = data_dir / f"{center}/images"
 default_labels_original_folder = data_dir / f"{center}/labels_original"
@@ -85,53 +85,53 @@ def main(input_folder, output_images_folder, output_labels_folder,
     label_renamed_folder = output_images_folder.parent / "labels_renamed"
     label_renamed_folder.mkdir(exist_ok=True, parents=False)
 
-    # logger.info("Converting Dicom to Nifty - START")
-    # if center == "montreal":
-    #     labels_startswith = "GTV"
-    # else:
-    #     labels_startswith = None
+    logger.info("Converting Dicom to Nifty - START")
+    if "montreal" in center.lower():
+        labels_startswith = "GTV"
+    else:
+        labels_startswith = None
 
-    # converter = NiftiConverter(
-    #     padding="whole_image",
-    #     labels_startswith=labels_startswith,
-    #     # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=24),
-    #     dicom_walker=DicomWalker(cores=12),
-    #     cores=12,
-    #     # cores=None,
-    #     naming=2,
-    # )
-    # conversion_results = converter(input_folder,
-    #                                output_folder=output_images_folder)
-    # list_errors = [
-    #     d.get("patient_id") for d in conversion_results
-    #     if d.get("status") == "failed"
-    # ]
-    # print(f"List of patients with errors: {list_errors}")
-    # logger.info("Converting Dicom to Nifty - END")
-    # logger.info("Removing extra VOI - START")
-    # sort_vois(output_images_folder,
-    #           output_labels_original_folder,
-    #           dump_folder,
-    #           center=center,
-    #           voi_mapping=voi_mapping)
-    # logger.info("Removing extra VOI - END")
-    # logger.info("Combining all VOIs into one file - START")
-    # combine_vois(output_labels_original_folder,
-    #              output_labels_folder,
-    #              dump_folder,
-    #              center=center,
-    #              voi_mapping=voi_mapping)
-    # logger.info("Combining all VOIs into one file - END")
-    # logger.info("Renaming files- START")
-    # correct_names(output_images_folder,
-    #               image_renamed_folder,
-    #               name_mapping,
-    #               center=center)
-    # correct_names(output_labels_folder,
-    #               label_renamed_folder,
-    #               name_mapping,
-    #               center=center)
-    # logger.info("Renaming files- END")
+    converter = NiftiConverter(
+        padding="whole_image",
+        labels_startswith=labels_startswith,
+        # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=24),
+        dicom_walker=DicomWalker(cores=12),
+        cores=12,
+        # cores=None,
+        naming=2,
+    )
+    conversion_results = converter(input_folder,
+                                   output_folder=output_images_folder)
+    list_errors = [
+        d.get("patient_id") for d in conversion_results
+        if d.get("status") == "failed"
+    ]
+    print(f"List of patients with errors: {list_errors}")
+    logger.info("Converting Dicom to Nifty - END")
+    logger.info("Removing extra VOI - START")
+    sort_vois(output_images_folder,
+              output_labels_original_folder,
+              dump_folder,
+              center=center,
+              voi_mapping=voi_mapping)
+    logger.info("Removing extra VOI - END")
+    logger.info("Combining all VOIs into one file - START")
+    combine_vois(output_labels_original_folder,
+                 output_labels_folder,
+                 dump_folder,
+                 center=center,
+                 voi_mapping=voi_mapping)
+    logger.info("Combining all VOIs into one file - END")
+    logger.info("Renaming files- START")
+    correct_names(output_images_folder,
+                  image_renamed_folder,
+                  name_mapping,
+                  center=center)
+    correct_names(output_labels_folder,
+                  label_renamed_folder,
+                  name_mapping,
+                  center=center)
+    logger.info("Renaming files- END")
     logger.info("Cleaning the VOIs - START")
     clean_vois(label_renamed_folder)
     logger.info("Cleaning the VOIs - END")

@@ -102,7 +102,7 @@ def _combine_vois(input_folder, output_folder, archive_folder):
     patient_ids = list(
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
 
-    for patient_id in tqdm(patient_ids):
+    for patient_id in tqdm(patient_ids, desc="Combining VOIs"):
         gtvts = [f for f in input_folder.rglob(f"{patient_id}__GTVt*")]
         gtvns = [f for f in input_folder.rglob(f"{patient_id}__GTVn*")]
         if len(gtvts) == 0:
@@ -144,7 +144,7 @@ def _combine_vois_with_mapping(input_folder, output_folder, archive_folder,
     patient_ids = list(
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
 
-    for patient_id in tqdm(patient_ids):
+    for patient_id in tqdm(patient_ids, desc="Combining VOIs"):
         gtvs = [f for f in input_folder.rglob(f"{patient_id}__*")]
         labels_gtvt = voi_mapping[patient_id]["GTVt"]
         labels_gtvn = voi_mapping[patient_id]["GTVn"]
@@ -195,7 +195,7 @@ def _combine_vois_with_labels(input_folder,
     patient_ids = list(
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
 
-    for patient_id in tqdm(patient_ids):
+    for patient_id in tqdm(patient_ids, desc="Combining VOIs"):
         gtvs = [f for f in input_folder.rglob(f"{patient_id}__*")]
         gtvts = [f for f in gtvs if f.name.split("__")[1] in labels_gtvt]
         gtvns = [f for f in gtvs if f.name.split("__")[1] in labels_gtvn]
@@ -553,15 +553,15 @@ def remove_extra_components(
 def correct_images_direction(image_folder, mask_folder):
     image_folder = Path(image_folder)
     files = [
-        f for f in mask_folder.rglob("*.nii.gz")
-        if "_corrected" in f.name and "MDA-075" in f.name
+        f for f in mask_folder.rglob("*.nii.gz") if "_corrected" in f.name
     ]
-    for f in tqdm(files):
+    for f in tqdm(files, desc="Correcting images direction"):
         mask = sitk.ReadImage(str(f))
         patient_id = f.name.split(".")[0].strip("_corrected")
         if mask.GetDirection() == (1, 0, 0, 0, 1, 0, 0, 0, 1):
             continue
         mask = correct_direction(mask)
+        logger.warning(f"Correcting direction of {f.name}")
         images_path = [p for p in image_folder.rglob(patient_id + "*")]
         for image_path in images_path:
             image = sitk.ReadImage(str(image_path))
@@ -618,9 +618,8 @@ def clean_vois(input_folder):
     resampler.SetOutputSpacing((1, 1, 1))
     files = [
         f for f in input_folder.rglob("*.nii.gz") if not "_corrected" in f.name
-        if "MDA-075" in f.name
     ]
-    for f in tqdm(files):
+    for f in tqdm(files, desc="Cleaning VOIs"):
         patient_id = f.name.split(".")[0]
         mask = sitk.ReadImage(str(f.resolve()))
         mask = remove_extra_components(mask, patient_id, label=1)
