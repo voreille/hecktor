@@ -429,6 +429,30 @@ def correct_names(input_folder, output_folder, mapping, center="montreal"):
         _correct_names(input_folder, output_folder, mapping)
 
 
+def map_names_hecktor(patient_id, mapping, center="montreal"):
+    if "montreal" in center.lower():
+        return _map_names_hecktor_montreal(patient_id)
+    else:
+        return _map_names_hecktor(patient_id, mapping)
+
+
+def _map_names_hecktor(patient_id, mapping):
+    mapping_df = pd.read_csv(mapping)
+    mapping_df.dicom_id = mapping_df.dicom_id.astype(str)
+    mapping_df.hecktor_id = mapping_df.hecktor_id.astype(str)
+    mapping_dict = mapping_df.set_index("dicom_id").to_dict()["hecktor_id"]
+
+    try:
+        new_id = mapping_dict[patient_id]
+    except KeyError:
+        new_id = "No HECKTOR ID"
+    return new_id
+
+
+def _map_names_hecktor_montreal(patient_id):
+    return patient_id[3:]
+
+
 def _correct_names(input_folder, output_folder, mapping):
     input_folder = Path(input_folder)
     mapping_df = pd.read_csv(mapping)

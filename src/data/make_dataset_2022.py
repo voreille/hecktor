@@ -3,11 +3,11 @@ import json
 import logging
 
 logging.basicConfig(
-    filename="dicom_conversion_mda_test.log",
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.captureWarnings(True)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 import click
 import numpy as np
@@ -19,18 +19,38 @@ from src.data.utils import (correct_names, sort_vois, combine_vois, clean_vois,
                             correct_images_direction, compute_bbs)
 
 project_dir = Path(__file__).resolve().parents[2]
-# data_dir = Path("/run/media/val/083C23E228226C35/work/hecktor2022/processed/")
-data_dir = project_dir / "data/hecktor2022/processed/"
+data_dir = project_dir / "data/hecktor2022/"
 
-# default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
-center = "mda_test_corrected_v2"
-default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
-default_images_folder = data_dir / f"{center}/images"
-default_labels_original_folder = data_dir / f"{center}/labels_original"
-default_labels_folder = data_dir / f"{center}/labels"
-default_dump = data_dir / f"{center}/dump"
-default_name_mapping = data_dir / f"{center}/name_mapping.csv"
-voi_mapping = data_dir / f"{center}/vois_mapping.json"
+# Can have multiple folder for the same center depending on the version, with corrections or else
+# The usual pattern I use is <center_name>_[corrected_]v<version> with [corrected_] being optional
+# see the example in the the paths_to_dicom.json
+
+center_folder = "chb"
+
+fh = logging.FileHandler(f"dicom_conversion_{center_folder}.log")
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+
+def get_pure_center_name(center):
+    if "mda_test" in center:
+        return "mda_test"
+    return center.split("_")[0].lower()
+
+
+with open(data_dir / "paths_to_dicom.json", "r") as f:
+    center_paths = json.load(f)
+
+default_input_path = center_paths[center_folder]
+default_images_folder = data_dir / f"processed/{center_folder}/images"
+default_labels_original_folder = data_dir / f"processed/{center_folder}/labels_original"
+default_labels_folder = data_dir / f"processed/{center_folder}/labels"
+default_dump = data_dir / f"processed/{center_folder}/dump"
+default_name_mapping = data_dir / f"mappings/name_mapping_{get_pure_center_name(center_folder)}.csv"
+voi_mapping = data_dir / f"mappings/vois_mapping_{get_pure_center_name(center_folder)}.json"
 
 if voi_mapping.exists():
     with open(voi_mapping, "r") as f:
@@ -43,7 +63,7 @@ def filter_func(study):
     # return study.patient_id == "CHB003"
 
     error_list = [
-        'HN-HGJ-010',
+        'USZ045',
     ]
     return study.patient_id in error_list
 
@@ -85,52 +105,52 @@ def main(input_folder, output_images_folder, output_labels_folder,
     label_renamed_folder = output_images_folder.parent / "labels_renamed"
     label_renamed_folder.mkdir(exist_ok=True, parents=False)
 
-    logger.info("Converting Dicom to Nifty - START")
-    if "montreal" in center.lower():
-        labels_startswith = "GTV"
-    else:
-        labels_startswith = None
+    # logger.info("Converting Dicom to Nifty - START")
+    # if "montreal" in center_folder.lower():
+    #     labels_startswith = "GTV"
+    # else:
+    #     labels_startswith = None
 
-    converter = NiftiConverter(
-        padding="whole_image",
-        labels_startswith=labels_startswith,
-        # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=24),
-        dicom_walker=DicomWalker(cores=12),
-        cores=12,
-        # cores=None,
-        naming=2,
-    )
-    conversion_results = converter(input_folder,
-                                   output_folder=output_images_folder)
-    list_errors = [
-        d.get("patient_id") for d in conversion_results
-        if d.get("status") == "failed"
-    ]
-    print(f"List of patients with errors: {list_errors}")
-    logger.info("Converting Dicom to Nifty - END")
+    # converter = NiftiConverter(
+    #     padding="whole_image",
+    #     labels_startswith=labels_startswith,
+    #     # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
+    #     dicom_walker=DicomWalker(cores=12),
+    #     cores=12,
+    #     # cores=None,
+    #     naming=2,
+    # )
+    # conversion_results = converter(input_folder,
+    #                                output_folder=output_images_folder)
+    # list_errors = [
+    #     d.get("patient_id") for d in conversion_results
+    #     if d.get("status") == "failed"
+    # ]
+    # logger.info(f"List of patients with errors: {list_errors}")
+    # logger.info("Converting Dicom to Nifty - END")
     logger.info("Removing extra VOI - START")
     sort_vois(output_images_folder,
               output_labels_original_folder,
               dump_folder,
-              center=center,
+              center=center_folder,
               voi_mapping=voi_mapping)
     logger.info("Removing extra VOI - END")
     logger.info("Combining all VOIs into one file - START")
     combine_vois(output_labels_original_folder,
                  output_labels_folder,
                  dump_folder,
-                 center=center,
+                 center=center_folder,
                  voi_mapping=voi_mapping)
     logger.info("Combining all VOIs into one file - END")
     logger.info("Renaming files- START")
     correct_names(output_images_folder,
                   image_renamed_folder,
                   name_mapping,
-                  center=center)
+                  center=center_folder)
     correct_names(output_labels_folder,
                   label_renamed_folder,
                   name_mapping,
-                  center=center)
+                  center=center_folder)
     logger.info("Renaming files- END")
     logger.info("Cleaning the VOIs - START")
     clean_vois(label_renamed_folder)

@@ -3,8 +3,8 @@ import json
 
 project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/processed/"
-center = "mda_train"
-labels_dir = data_dir / f"{center}/labels_original"
+center = "chb"
+labels_dir = data_dir / f"{center}/images"
 output_file = data_dir / f"{center}/vois_mapping.json"
 
 if "chup" in center.lower():
@@ -12,23 +12,16 @@ if "chup" in center.lower():
         'GTV(2)', 'RGTVt', 'GTV_HEX', 'ROI-1', 'ROI-2', 'GTVp', 'ROI-3',
         'GTV_HE', 'GTVt', 'GTV', 'GTVt(2)'
     ]
-elif "mda_test" in center.lower():
-    gtvt_labels = [
-        'GTV-P', 'GTVP', 'GTV_P', 'GTVp', 'GTVp-YK', 'GTVp2', 'GTVp_KW',
-        'GTVp_KW_SA', 'GTVp_SA', 'GTVp_YK', 'GTVp_YK_SA'
-    ]
-elif "mda_train" in center.lower():
-    gtvt_labels = ["GTVp"]
-else:
-    gtvt_labels = ["GTVt"]
-
-if "chup" in center.lower():
     gtvn_labels = [
         'GTVn15', 'GTVn08', 'GTVn13', 'GTVn10', 'GTVn', 'GVn01', 'GTVn12',
         'GTVn06', 'GTVn11', 'GTVn07', 'GTVn14', 'GTVn02', 'GTVn09', 'GTVn03',
         'GTVn16', 'GTVn01', 'GTVn04', 'GTVn05'
     ]
 elif "mda_test" in center.lower():
+    gtvt_labels = [
+        'GTV-P', 'GTVP', 'GTV_P', 'GTVp', 'GTVp-YK', 'GTVp2', 'GTVp_KW',
+        'GTVp_KW_SA', 'GTVp_SA', 'GTVp_YK', 'GTVp_YK_SA'
+    ]
     gtvn_labels = [
         'GTNn2', 'GTV_7', 'GTV_N1', 'GTV_N10', 'GTV_N11', 'GTV_N2', 'GTV_N3',
         'GTV_N4', 'GTV_N5', 'GTV_N6', 'GTV_N7', 'GTV_N8', 'GTV_N9', 'GTV_N_1',
@@ -38,16 +31,25 @@ elif "mda_test" in center.lower():
         'GTVn6_SA', 'GTVn7', 'GTVn8', 'GTVn9'
     ]
 
+elif "mda_train" in center.lower():
+    gtvn_labels = ["GTVn"]
+    gtvt_labels = ["GTVp"]
 elif "montreal" in center.lower():
     gtvn_labels = [
         'GTV_N', 'GTVn', 'GTVn(2)', 'GTVn01', 'GTVn02', 'GTVn03', 'GTVn04',
         'GTVn05', 'GTVn06', 'GTVn07', 'GTVn08', 'GTVn1', 'GTVn2'
     ]
-else:
+    gtvt_labels = ["GTVt"]
+elif "chb" in center.lower():
     gtvn_labels = [
-        'GTV_N', 'GTVn', 'GTVn01', 'GTVn02', 'GTVn03', 'GTVn04', 'GTVn1',
-        'GTVn2'
+        'GTBn04', 'GTVn01', 'GTVn02', 'GTVn03', 'GTVn04', 'GTVn05', 'GTVn06',
+        'GTVn07', 'GTVn08', 'GTVn09', 'GTVn10', 'GTVn11', 'GTVn12', 'GTVn13',
+        'GTVn14', 'GTVn15', 'GTvn08', 'GVTn01', 'GVTn02', 'GVTn03'
     ]
+    gtvt_labels = ['GTVt01', 'GTVt02', 'GVTt01']
+else:
+    gtvn_labels = ["GTVn"]
+    gtvt_labels = ["GTVt"]
 
 
 def main():
@@ -65,6 +67,8 @@ def main():
         patient_ids.sort(key=lambda x: int(x))
     elif "mda_train" in center.lower():
         patient_ids.sort(key=lambda x: int(x.split("-")[2]))
+    elif "chb" in center.lower():
+        patient_ids.sort(key=lambda x: int(x[3:]))
     results = {}
     for patient in patient_ids:
         vois = [
