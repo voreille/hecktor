@@ -106,3 +106,4 @@ notebooks/qc_params.yaml
 src/aicrowd_evaluator/data_aicrowd.zip
 Dockerfile
 .devcontainer/
+notebooks/qc_analysis.ipynb
