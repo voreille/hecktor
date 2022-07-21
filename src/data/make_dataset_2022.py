@@ -1,6 +1,7 @@
 from pathlib import Path
 import json
 import logging
+from shutil import move
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -25,7 +26,7 @@ data_dir = project_dir / "data/hecktor2022/"
 # The usual pattern I use is <center_name>_[corrected_]v<version> with [corrected_] being optional
 # see the example in the the paths_to_dicom.json
 
-center_folder = "chb"
+center_folder = "mda_test"
 
 fh = logging.FileHandler(f"dicom_conversion_{center_folder}.log")
 fh.setLevel(logging.DEBUG)
@@ -63,7 +64,7 @@ def filter_func(study):
     # return study.patient_id == "CHB003"
 
     error_list = [
-        'USZ045',
+        "2827563172",
     ]
     return study.patient_id in error_list
 
@@ -83,8 +84,19 @@ def filter_func(study):
 @click.option("--name_mapping",
               type=click.Path(),
               default=default_name_mapping)
+@click.option("--clean-nifty",
+              is_flag=True,
+              show_default=True,
+              default=False,
+              help="Clean the nifty files")
+@click.option("--clean-all",
+              is_flag=True,
+              show_default=True,
+              default=False,
+              help="Remove all the nifty files")
 def main(input_folder, output_images_folder, output_labels_folder,
-         output_labels_original_folder, dump_folder, name_mapping):
+         output_labels_original_folder, dump_folder, name_mapping, clean_nifty,
+         clean_all):
     """Command Line Interface to make the dataset for the HECKTOR Challenge
         In short, this routine convert the DICOM files to NIFTI and stores the CT in 
         Hounsfield Unit and the PET in Standardized Uptake value.
@@ -105,29 +117,57 @@ def main(input_folder, output_images_folder, output_labels_folder,
     label_renamed_folder = output_images_folder.parent / "labels_renamed"
     label_renamed_folder.mkdir(exist_ok=True, parents=False)
 
-    # logger.info("Converting Dicom to Nifty - START")
-    # if "montreal" in center_folder.lower():
-    #     labels_startswith = "GTV"
-    # else:
-    #     labels_startswith = None
+    if clean_nifty:
+        for f in dump_folder.glob("*.nii.gz"):
+            move(f, output_images_folder)
+        for f in output_labels_original_folder.glob("*.nii.gz"):
+            move(f, output_images_folder)
+        for f in output_labels_folder.glob("*.nii.gz"):
+            move(f, output_images_folder)
+        for f in image_renamed_folder.glob("*.nii.gz"):
+            f.unlink()
+        for f in label_renamed_folder.glob("*.nii.gz"):
+            f.unlink()
+        return
 
-    # converter = NiftiConverter(
-    #     padding="whole_image",
-    #     labels_startswith=labels_startswith,
-    #     # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
-    #     dicom_walker=DicomWalker(cores=12),
-    #     cores=12,
-    #     # cores=None,
-    #     naming=2,
-    # )
-    # conversion_results = converter(input_folder,
-    #                                output_folder=output_images_folder)
-    # list_errors = [
-    #     d.get("patient_id") for d in conversion_results
-    #     if d.get("status") == "failed"
-    # ]
-    # logger.info(f"List of patients with errors: {list_errors}")
-    # logger.info("Converting Dicom to Nifty - END")
+    if clean_all:
+        for f in output_images_folder.glob("*.nii.gz"):
+            f.unlink()
+        for f in dump_folder.glob("*.nii.gz"):
+            f.unlink()
+        for f in output_labels_folder.glob("*.nii.gz"):
+            f.unlink()
+        for f in output_labels_original_folder.glob("*.nii.gz"):
+            f.unlink()
+        for f in image_renamed_folder.glob("*.nii.gz"):
+            f.unlink()
+        for f in label_renamed_folder.glob("*.nii.gz"):
+            f.unlink()
+        return
+
+    logger.info("Converting Dicom to Nifty - START")
+    if "montreal" in center_folder.lower():
+        labels_startswith = "GTV"
+    else:
+        labels_startswith = None
+
+    converter = NiftiConverter(
+        padding="whole_image",
+        labels_startswith=labels_startswith,
+        # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
+        dicom_walker=DicomWalker(cores=12),
+        cores=12,
+        # cores=None,
+        naming=2,
+    )
+    conversion_results = converter(input_folder,
+                                   output_folder=output_images_folder)
+    list_errors = [
+        d.get("patient_id") for d in conversion_results
+        if d.get("status") == "failed"
+    ]
+    logger.info(f"List of patients with errors: {list_errors}")
+    logger.info("Converting Dicom to Nifty - END")
     logger.info("Removing extra VOI - START")
     sort_vois(output_images_folder,
               output_labels_original_folder,

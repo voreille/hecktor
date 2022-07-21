@@ -260,7 +260,7 @@ def _sort_vois_with_mapping(input_folder, output_folder, archive_folder,
     archive_folder = Path(archive_folder)
     voi_files_to_move = [
         f for f in Path(input_folder).rglob("*RTSTRUCT*")
-        if "PT" in f.name or ")." in f.name
+        if "__PT__" in f.name or ")." in f.name
     ]
     for f in voi_files_to_move:
         shutil.move(f, archive_folder / f.name)

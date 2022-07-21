@@ -3,9 +3,9 @@ import json
 
 project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/processed/"
-center = "chb"
+center = "usz"
 labels_dir = data_dir / f"{center}/images"
-output_file = data_dir / f"{center}/vois_mapping.json"
+output_file = project_dir / f"data/hecktor2022/mappings/vois_mapping_{center}.json"
 
 if "chup" in center.lower():
     gtvt_labels = [
@@ -47,6 +47,17 @@ elif "chb" in center.lower():
         'GTVn14', 'GTVn15', 'GTvn08', 'GVTn01', 'GVTn02', 'GVTn03'
     ]
     gtvt_labels = ['GTVt01', 'GTVt02', 'GVTt01']
+elif "usz" in center.lower():
+    gtvn_labels = [
+        'GTV_LN',
+        'GTV_N',
+        'GTVn',
+    ]
+    gtvt_labels = [
+        'GTV_PT',
+        'GTVp',
+    ]
+
 else:
     gtvn_labels = ["GTVn"]
     gtvt_labels = ["GTVt"]
@@ -68,6 +79,8 @@ def main():
     elif "mda_train" in center.lower():
         patient_ids.sort(key=lambda x: int(x.split("-")[2]))
     elif "chb" in center.lower():
+        patient_ids.sort(key=lambda x: int(x[3:]))
+    elif "usz" in center.lower():
         patient_ids.sort(key=lambda x: int(x[3:]))
     results = {}
     for patient in patient_ids:

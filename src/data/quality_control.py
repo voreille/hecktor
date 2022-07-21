@@ -29,8 +29,8 @@ def main(input_folder, output_path, cores):
         f for f in input_folder.rglob("*labels_renamed/*_corrected.nii.gz")
     ]
     patient_ids = set([f.name.split("_")[0] for f in vois])
-    if "mda_test" in center.lower():
-        patient_ids = [p for p in patient_ids if int(p.split("-")[1]) < 202]
+    # if "mda_test" in center.lower():
+    #     patient_ids = [p for p in patient_ids if int(p.split("-")[1]) < 202]
     processor = PatientProcessor(input_folder)
     if cores:
         with Pool(cores) as p:
@@ -101,6 +101,7 @@ class PatientProcessor():
         self.resampler.SetSize([int(k) for k in size])  # sitk is so stupid
         self.resampler.SetOutputSpacing(mask.GetSpacing())
         self.resampler.SetOutputDirection(mask.GetDirection())
+        self.resampler.SetInterpolator(sitk.sitkNearestNeighbor)
 
     def __call__(self, patient_id):
         image_paths = [
@@ -124,14 +125,15 @@ class PatientProcessor():
             self.resampler.SetOutputSpacing(mask.GetSpacing())
             self.resampler.SetOutputDirection(mask.GetDirection())
 
+        self.resampler.SetInterpolator(sitk.sitkBSpline)
         images = [{
             "image": self.resampler.Execute(sitk.ReadImage(str(f))),
-            "modality": f.name.split("__")[1]
+            "modality": f.name.split("__")[1].split(".")[0],
         } for f in image_paths]
 
         mask_array = sitk.GetArrayFromImage(mask)
         results = pd.DataFrame()
-        vois_label = {"GTVt": 1, "GTVp": 2}
+        vois_label = {"GTVp": 1, "GTVn": 2}
         for voi, image_ in product(vois_label.keys(), images):
             if np.sum(mask_array == vois_label[voi]) == 0:
                 continue
