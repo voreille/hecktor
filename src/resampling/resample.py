@@ -7,15 +7,11 @@ import pandas as pd
 import numpy as np
 import SimpleITK as sitk
 
-# Default paths
-# path_in = 'data/hecktor_nii/'
-# path_out = 'data/resampled/'
-# path_bb = 'data/bbox.csv'
 
-path_input_images = "/home/val/python_wkspce/hecktor/data/hecktor2022/processed/chuv/images_renamed/"
-path_input_labels = "/home/val/python_wkspce/hecktor/data/hecktor2022/processed/chuv/labels_renamed/"
-path_output_images = 'data/test'
-path_output_labels = 'data/test'
+path_input_images = "data/imagesTr"
+path_input_labels = "data/labelsTr"
+path_output_images = "data/labelsTr_resampled"
+path_output_labels = "data/labelsTr_resampled"
 
 
 @click.command()
