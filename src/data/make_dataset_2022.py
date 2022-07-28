@@ -145,29 +145,29 @@ def main(input_folder, output_images_folder, output_labels_folder,
             f.unlink()
         return
 
-    logger.info("Converting Dicom to Nifty - START")
-    if "montreal" in center_folder.lower():
-        labels_startswith = "GTV"
-    else:
-        labels_startswith = None
+    # logger.info("Converting Dicom to Nifty - START")
+    # if "montreal" in center_folder.lower():
+    #     labels_startswith = "GTV"
+    # else:
+    #     labels_startswith = None
 
-    converter = NiftiConverter(
-        padding="whole_image",
-        labels_startswith=labels_startswith,
-        # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
-        dicom_walker=DicomWalker(cores=12),
-        cores=12,
-        # cores=None,
-        naming=2,
-    )
-    conversion_results = converter(input_folder,
-                                   output_folder=output_images_folder)
-    list_errors = [
-        d.get("patient_id") for d in conversion_results
-        if d.get("status") == "failed"
-    ]
-    logger.info(f"List of patients with errors: {list_errors}")
-    logger.info("Converting Dicom to Nifty - END")
+    # converter = NiftiConverter(
+    #     padding="whole_image",
+    #     labels_startswith=labels_startswith,
+    #     # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
+    #     dicom_walker=DicomWalker(cores=12),
+    #     cores=12,
+    #     # cores=None,
+    #     naming=2,
+    # )
+    # conversion_results = converter(input_folder,
+    #                                output_folder=output_images_folder)
+    # list_errors = [
+    #     d.get("patient_id") for d in conversion_results
+    #     if d.get("status") == "failed"
+    # ]
+    # logger.info(f"List of patients with errors: {list_errors}")
+    # logger.info("Converting Dicom to Nifty - END")
     logger.info("Removing extra VOI - START")
     sort_vois(output_images_folder,
               output_labels_original_folder,
