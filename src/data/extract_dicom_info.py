@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import logging
 
 logging.basicConfig(
@@ -16,13 +17,24 @@ from src.data.utils import map_names_hecktor
 
 project_dir = Path(__file__).resolve().parents[2]
 # data_dir = Path("/run/media/val/083C23E228226C35/work/hecktor2022/processed/")
-data_dir = project_dir / "data/hecktor2022/processed/"
+data_dir = project_dir / "data/hecktor2022/"
+
+
+def get_pure_center_name(center):
+    if "mda_test" in center:
+        return "mda_test"
+    return center.split("_")[0].lower()
+
+
+with open(data_dir / "paths_to_dicom.json", "r") as f:
+    center_paths = json.load(f)
 
 # default_input_path = project_dir / "hecktor/data/hecktor2022/raw/mda_test"
-center = "CHUV"
-default_input_path = f"/media/val/Windows/Users/valen/Documents/work/{center}/"
-default_name_mapping = data_dir / f"{center}/name_mapping.csv"
-default_output_filepath = data_dir / f"dicom_info_{center}.csv"
+center_folder = "mda_test_corrected_v3"
+center = get_pure_center_name(center_folder)
+default_input_path = center_paths[center_folder]
+default_name_mapping = project_dir / f"data/hecktor2022/mappings/name_mapping_{center}.csv"
+default_output_filepath = project_dir / f"data/hecktor2022/dicom_info_{center}.csv"
 
 
 @click.command()

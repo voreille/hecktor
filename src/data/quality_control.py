@@ -9,7 +9,7 @@ import SimpleITK as sitk
 from tqdm import tqdm
 from radiomics.featureextractor import RadiomicsFeatureExtractor
 
-center = "mda_test"
+center = "usz"
 project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/processed/"
 

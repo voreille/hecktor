@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from datetime import datetime
 import shutil
@@ -672,3 +673,47 @@ def compute_bbs(input_folder):
             },
             ignore_index=True)
     return bb_df.set_index("PatientID")
+
+
+def get_id_from_filename(filename):
+    return filename.split(".")[0].split("__")[0].replace("_corrected", "")
+
+
+def crop_images(input_folder, output_folder, bb_file):
+    input_folder = Path(input_folder).resolve()
+    output_folder = Path(output_folder).resolve()
+    with open(bb_file, "r") as f:
+        bb = json.load(f)
+
+    file_to_crop = [
+        f for f in input_folder.rglob("*.nii.gz")
+        if get_id_from_filename(f.name) in bb.keys()
+    ]
+    for file in file_to_crop:
+        patient_id = get_id_from_filename(file.name)
+        image = sitk.ReadImage(str(file))
+        origin = image.GetOrigin()
+        origin_cropped_1 = np.array(
+            [origin[0], origin[1], bb[patient_id]["z_domain"][0]])
+        origin_cropped_2 = np.array(
+            [origin[0], origin[1], bb[patient_id]["z_domain"][1]])
+
+        array = np.transpose(sitk.GetArrayFromImage(image), (2, 1, 0))
+
+        index_1 = list(image.TransformPhysicalPointToIndex(origin_cropped_1))
+        index_2 = list(image.TransformPhysicalPointToIndex(origin_cropped_2))
+        image_shape = array.shape
+        for i in range(3):
+            if index_1[i] < 0:
+                index_1[i] = 0
+            if index_2[i] >= image_shape[i]:
+                index_2[i] = image_shape[i] - 1
+
+        array = array[:, :, int(index_1[2]):int(index_2[2])]
+        image_out = sitk.GetImageFromArray(np.transpose(array, (2, 1, 0)))
+        image_out.SetOrigin(image.TransformIndexToPhysicalPoint(index_1))
+        image_out.SetSpacing(image.GetSpacing())
+        filepath = str(
+            (output_folder /
+             (file.name.replace(".nii.gz", "") + "_cropped.nii.gz")))
+        sitk.WriteImage(image_out, filepath)

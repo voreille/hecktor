@@ -17,7 +17,7 @@ from okapy.dicomconverter.converter import NiftiConverter
 from okapy.dicomconverter.dicom_walker import DicomWalker
 
 from src.data.utils import (correct_names, sort_vois, combine_vois, clean_vois,
-                            correct_images_direction, compute_bbs)
+                            correct_images_direction, crop_images)
 
 project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/"
@@ -26,7 +26,7 @@ data_dir = project_dir / "data/hecktor2022/"
 # The usual pattern I use is <center_name>_[corrected_]v<version> with [corrected_] being optional
 # see the example in the the paths_to_dicom.json
 
-center_folder = "mda_test"
+center_folder = "mda_test_corrected_v3"
 
 fh = logging.FileHandler(f"dicom_conversion_{center_folder}.log")
 fh.setLevel(logging.DEBUG)
@@ -52,6 +52,7 @@ default_labels_folder = data_dir / f"processed/{center_folder}/labels"
 default_dump = data_dir / f"processed/{center_folder}/dump"
 default_name_mapping = data_dir / f"mappings/name_mapping_{get_pure_center_name(center_folder)}.csv"
 voi_mapping = data_dir / f"mappings/vois_mapping_{get_pure_center_name(center_folder)}.json"
+bb_file = data_dir / f"mappings/bb_mapping_{get_pure_center_name(center_folder)}.json"
 
 if voi_mapping.exists():
     with open(voi_mapping, "r") as f:
@@ -64,7 +65,7 @@ def filter_func(study):
     # return study.patient_id == "CHB003"
 
     error_list = [
-        "2827563172",
+        "CHB039",
     ]
     return study.patient_id in error_list
 
@@ -145,29 +146,29 @@ def main(input_folder, output_images_folder, output_labels_folder,
             f.unlink()
         return
 
-    # logger.info("Converting Dicom to Nifty - START")
-    # if "montreal" in center_folder.lower():
-    #     labels_startswith = "GTV"
-    # else:
-    #     labels_startswith = None
+    logger.info("Converting Dicom to Nifty - START")
+    if "montreal" in center_folder.lower():
+        labels_startswith = "GTV"
+    else:
+        labels_startswith = None
 
-    # converter = NiftiConverter(
-    #     padding="whole_image",
-    #     labels_startswith=labels_startswith,
-    #     # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
-    #     dicom_walker=DicomWalker(cores=12),
-    #     cores=12,
-    #     # cores=None,
-    #     naming=2,
-    # )
-    # conversion_results = converter(input_folder,
-    #                                output_folder=output_images_folder)
-    # list_errors = [
-    #     d.get("patient_id") for d in conversion_results
-    #     if d.get("status") == "failed"
-    # ]
-    # logger.info(f"List of patients with errors: {list_errors}")
-    # logger.info("Converting Dicom to Nifty - END")
+    converter = NiftiConverter(
+        padding="whole_image",
+        labels_startswith=labels_startswith,
+        # dicom_walker=DicomWalkerWithFilter(filter_func=filter_func, cores=12),
+        dicom_walker=DicomWalker(cores=12),
+        cores=12,
+        # cores=None,
+        naming=2,
+    )
+    conversion_results = converter(input_folder,
+                                   output_folder=output_images_folder)
+    list_errors = [
+        d.get("patient_id") for d in conversion_results
+        if d.get("status") == "failed"
+    ]
+    logger.info(f"List of patients with errors: {list_errors}")
+    logger.info("Converting Dicom to Nifty - END")
     logger.info("Removing extra VOI - START")
     sort_vois(output_images_folder,
               output_labels_original_folder,
@@ -198,6 +199,13 @@ def main(input_folder, output_images_folder, output_labels_folder,
     logger.info("Cleaning the VOIs - START")
     correct_images_direction(image_renamed_folder, label_renamed_folder)
     logger.info("Cleaning the VOIs - END")
+    if bb_file.exists():
+        logger.info("Cropping Images - START")
+        crop_images(image_renamed_folder, image_renamed_folder, bb_file)
+        crop_images(label_renamed_folder, label_renamed_folder, bb_file)
+        logger.info("Cropping Images - END")
+
+
 
 
 class DicomWalkerWithFilter(DicomWalker):
