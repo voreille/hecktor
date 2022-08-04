@@ -1,3 +1,7 @@
+If you need some code to get started for the HECKTOR2022 Challenge you can take inspiration from the resampling code under src/resampling/resample2022.py.
+
+
+
 HECKTOR 2021 challenge WATCH OUT, this version is not updated yet for the 2022 edition
 ==============================
 
