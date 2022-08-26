@@ -9,29 +9,32 @@ import SimpleITK as sitk
 from tqdm import tqdm
 from radiomics.featureextractor import RadiomicsFeatureExtractor
 
-center = "mda_test"
 project_dir = Path(__file__).resolve().parents[2]
 data_dir = project_dir / "data/hecktor2022/processed/"
 
-default_input_folder = data_dir / f"{center}/"
-default_output_path = project_dir / f"data/hecktor2022/qc_{center}.csv"
+# default_image_folder = data_dir / f"{center}/images_renamed"
+# default_label_folder = data_dir / f"{center}/labels_renamed"
+
+default_image_folder = "/home/val/python_wkspce/hecktor/data/hecktor2022/hecktor2022_testing/imagesTs"
+default_label_folder = "/home/val/python_wkspce/hecktor/data/hecktor2022/hecktor2022_testing/labelsTs"
+default_output_path = project_dir / f"data/hecktor2022/qc_test.csv"
 
 
 @click.command()
-@click.argument('input_folder',
+@click.argument('image_folder',
                 type=click.Path(),
-                default=default_input_folder)
+                default=default_image_folder)
+@click.argument('label_folder',
+                type=click.Path(),
+                default=default_label_folder)
 @click.argument('output_path', type=click.Path(), default=default_output_path)
 @click.option("--cores", type=click.INT, default=None)
-def main(input_folder, output_path, cores):
-    input_folder = Path(input_folder)
-    vois = [
-        f for f in input_folder.rglob("*labels_renamed/*_corrected.nii.gz")
-    ]
-    patient_ids = set([f.name.split("_")[0] for f in vois])
-    if "mda_test" in center.lower():
-        patient_ids = [p for p in patient_ids if int(p.split("-")[1]) > 201]
-    processor = PatientProcessor(input_folder)
+def main(image_folder, label_folder, output_path, cores):
+    image_folder = Path(image_folder)
+    label_folder = Path(label_folder)
+    vois = [f for f in label_folder.rglob("*.nii.gz")]
+    patient_ids = set([f.stem.split(".")[0] for f in vois])
+    processor = PatientProcessor(image_folder, label_folder)
     if cores:
         with Pool(cores) as p:
             result = list(
@@ -46,8 +49,9 @@ def main(input_folder, output_path, cores):
 
 class PatientProcessor():
 
-    def __init__(self, input_folder):
-        self.input_folder = input_folder
+    def __init__(self, image_folder, label_folder):
+        self.image_folder = image_folder
+        self.label_folder = label_folder
         self.resampler = sitk.ResampleImageFilter()
         self.resampler.SetInterpolator(sitk.sitkLinear)
         self.featureextractor = RadiomicsFeatureExtractor(
@@ -104,14 +108,8 @@ class PatientProcessor():
         self.resampler.SetInterpolator(sitk.sitkNearestNeighbor)
 
     def __call__(self, patient_id):
-        image_paths = [
-            f
-            for f in self.input_folder.rglob(f"*images_renamed/{patient_id}*")
-        ]
-        mask_paths = [
-            f
-            for f in self.input_folder.rglob(f"*labels_renamed/{patient_id}*")
-        ]
+        image_paths = [f for f in self.image_folder.rglob(f"{patient_id}*")]
+        mask_paths = [f for f in self.label_folder.rglob(f"{patient_id}*")]
         mask = sitk.ReadImage(str(mask_paths[0]))
         try:
             self._configure_resampler(mask)

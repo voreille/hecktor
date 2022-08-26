@@ -178,6 +178,9 @@ def _combine_vois_with_mapping(input_folder, output_folder, archive_folder,
             array_gtvn += sitk.GetArrayFromImage(
                 sitk.ReadImage(str(voi.resolve())))
         array[array != 0] = 1
+        if np.sum((array != 0) & (array_gtvn != 0)) > 0:
+            logger.warning(
+                f"WATCH OUT {patient_id} has GTVt overlapping with GTVn")
         array[array_gtvn != 0] = 2
         output = sitk.GetImageFromArray(array)
         output.SetSpacing(mask.GetSpacing())
@@ -241,10 +244,15 @@ def sort_vois(
     archive_folder,
     center="montreal",
     voi_mapping=None,
+    keep_only_latest_rtstruct=False,
 ):
     if voi_mapping:
-        _sort_vois_with_mapping(input_folder, output_folder, archive_folder,
-                                voi_mapping)
+        _sort_vois_with_mapping(
+            input_folder,
+            output_folder,
+            archive_folder,
+            voi_mapping,
+            keep_only_latest_rtstruct=keep_only_latest_rtstruct)
         return
     if "mda" in center.lower():
         _sort_vois_mda(input_folder, output_folder, archive_folder)
@@ -254,8 +262,28 @@ def sort_vois(
         _sort_vois(input_folder, output_folder, archive_folder)
 
 
-def _sort_vois_with_mapping(input_folder, output_folder, archive_folder,
-                            voi_mapping):
+def move_older_rtstructs(patient_id, input_folder, archive_folder):
+    input_folder = Path(input_folder)
+    archive_folder = Path(archive_folder)
+    rtstructs = [
+        f for f in input_folder.rglob(f"{patient_id}__*")
+        if "RTSTRUCT" in f.name
+    ]
+    if len(rtstructs) == 0:
+        return
+    latest_date = max([get_datetime_from_filename(f) for f in rtstructs])
+    rtstruct_to_move = [
+        f for f in rtstructs if get_datetime_from_filename(f) < latest_date
+    ]
+    for f in rtstruct_to_move:
+        shutil.move(f, archive_folder / f.name)
+
+
+def _sort_vois_with_mapping(input_folder,
+                            output_folder,
+                            archive_folder,
+                            voi_mapping,
+                            keep_only_latest_rtstruct=False):
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     archive_folder = Path(archive_folder)
@@ -270,6 +298,8 @@ def _sort_vois_with_mapping(input_folder, output_folder, archive_folder,
         set([f.name.split("__")[0] for f in input_folder.rglob("*")]))
 
     for patient_id in patient_ids:
+        if keep_only_latest_rtstruct:
+            move_older_rtstructs(patient_id, input_folder, archive_folder)
         labels = set([
             f.name.split("__")[1]
             for f in input_folder.rglob(f"{patient_id}__*RTSTRUCT*")
@@ -383,8 +413,13 @@ def move_gtv_one_patient(input_folder,
 
 
 def get_datetime_from_filename(file):
-    return datetime.strptime(
+    try:
+        output = datetime.strptime(
         file.name.split("__")[-1].split(".")[0], "%Y-%m-%d_%H-%M-%S")
+    except ValueError:
+        output = datetime(1600, 1, 1)
+
+    return output
 
 
 def move_gtv_one_patient_old(input_folder,
@@ -594,7 +629,8 @@ def correct_images_direction(image_folder, mask_folder):
             output_path = image_folder / (image_path.name.split(".")[0] +
                                           "_corrected.nii.gz")
             sitk.WriteImage(image, str(output_path))
-        output_path = mask_folder / (patient_id + "_corrected.nii.gz")
+        output_path = mask_folder / (patient_id +
+                                     "_corrected_realigned.nii.gz")
         sitk.WriteImage(mask, str(output_path))
 
 
@@ -632,7 +668,7 @@ def correct_direction(image):
     )
     array = np.transpose(array, (2, 1, 0))
     output_image = sitk.GetImageFromArray(array)
-    output_image.SetOrigin(image.GetOrigin())
+    output_image.SetOrigin(new_origin)
     output_image.SetSpacing(image.GetSpacing())
     return output_image
 

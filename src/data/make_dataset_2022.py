@@ -26,7 +26,7 @@ data_dir = project_dir / "data/hecktor2022/"
 # The usual pattern I use is <center_name>_[corrected_]v<version> with [corrected_] being optional
 # see the example in the the paths_to_dicom.json
 
-center_folder = "mda_test_corrected_v3"
+center_folder = "usz_corrected"
 
 fh = logging.FileHandler(f"dicom_conversion_{center_folder}.log")
 fh.setLevel(logging.DEBUG)
@@ -151,6 +151,11 @@ def main(input_folder, output_images_folder, output_labels_folder,
         labels_startswith = "GTV"
     else:
         labels_startswith = None
+    
+    if "chb" in center_folder.lower():
+        keep_only_latest_rtstruct = True
+    else:
+        keep_only_latest_rtstruct = False
 
     converter = NiftiConverter(
         padding="whole_image",
@@ -174,7 +179,8 @@ def main(input_folder, output_images_folder, output_labels_folder,
               output_labels_original_folder,
               dump_folder,
               center=center_folder,
-              voi_mapping=voi_mapping)
+              voi_mapping=voi_mapping,
+              keep_only_latest_rtstruct=keep_only_latest_rtstruct)
     logger.info("Removing extra VOI - END")
     logger.info("Combining all VOIs into one file - START")
     combine_vois(output_labels_original_folder,
@@ -204,8 +210,6 @@ def main(input_folder, output_images_folder, output_labels_folder,
         crop_images(image_renamed_folder, image_renamed_folder, bb_file)
         crop_images(label_renamed_folder, label_renamed_folder, bb_file)
         logger.info("Cropping Images - END")
-
-
 
 
 class DicomWalkerWithFilter(DicomWalker):
