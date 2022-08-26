@@ -4,7 +4,9 @@ This repository was not updated for the HECKTOR 2022 edition, since we do not pr
 If you need some code to get started for the HECKTOR2022 Challenge you can take inspiration from the resampling code under src/resampling/resample_2022.py.
 If you are stuck do not hesitate to post question on the challenge forum: https://grand-challenge.org/forums/forum/hecktor-656/
 
-
+We also added two notebooks (dummy examples) to help explaining what we expect for the submission.
+* Segmenation: notebooks/example_seg_submission2022.ipynb
+* Survival: notebooks/example_surv_submission2022.ipynb
 
 HECKTOR 2021 challenge WATCH OUT, this version is not updated yet for the 2022 edition
 ==============================
