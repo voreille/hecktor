@@ -8,7 +8,7 @@ We also added two notebooks (dummy examples) to help explaining what we expect f
 * Segmentation: notebooks/example_seg_submission2022.ipynb
 * Survival: notebooks/example_surv_submission2022.ipynb
 
-In the notebook notebooks/evaluate_segmentation2022.ipynb you will find the code we use for the segmentation evaluation.
+In the notebook notebooks/evaluate_segmentation2022.ipynb you will find the code we use for the evaluation of the segmentation task.
 
 HECKTOR 2021 challenge WATCH OUT, this version is not updated yet for the 2022 edition
 ==============================
