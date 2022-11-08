@@ -60,17 +60,17 @@ def find_missing_gtvt(patient_id, archive_folder, labels=None):
     return
 
 
-def combine_vois(
+def combine_vois_old(
     input_folder,
     output_folder,
     archive_folder,
     center="montreal",
     voi_mapping=None,
 ):
-    if voi_mapping:
-        _combine_vois_with_mapping(input_folder, output_folder, archive_folder,
-                                   voi_mapping)
-        return
+    # if voi_mapping:
+    #     _combine_vois_with_mapping(input_folder, output_folder, archive_folder,
+    #                                voi_mapping)
+    #     return
     if "mda" in center.lower():
         labels_gtvt = [
             "GTVp", "GTVP", "GTV_P", "GTVp_KW", "GTV_7", "GTVp_YK",
@@ -138,7 +138,8 @@ def _combine_vois(input_folder, output_folder, archive_folder):
         sitk.WriteImage(output, str(output_folder / f"{patient_id}.nii.gz"))
 
 
-def _combine_vois_with_mapping(input_folder, output_folder, archive_folder,
+# def _combine_vois_with_mapping(input_folder, output_folder, archive_folder,
+def combine_vois(input_folder, output_folder, archive_folder,
                                voi_mapping):
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
@@ -238,7 +239,7 @@ def _combine_vois_with_labels(input_folder,
         sitk.WriteImage(output, str(output_folder / f"{patient_id}.nii.gz"))
 
 
-def sort_vois(
+def sort_vois_old(
     input_folder,
     output_folder,
     archive_folder,
@@ -246,14 +247,14 @@ def sort_vois(
     voi_mapping=None,
     keep_only_latest_rtstruct=False,
 ):
-    if voi_mapping:
-        _sort_vois_with_mapping(
-            input_folder,
-            output_folder,
-            archive_folder,
-            voi_mapping,
-            keep_only_latest_rtstruct=keep_only_latest_rtstruct)
-        return
+    # if voi_mapping:
+    #     _sort_vois_with_mapping(
+    #         input_folder,
+    #         output_folder,
+    #         archive_folder,
+    #         voi_mapping,
+    #         keep_only_latest_rtstruct=keep_only_latest_rtstruct)
+    #     return
     if "mda" in center.lower():
         _sort_vois_mda(input_folder, output_folder, archive_folder)
     elif "chup" in center.lower():
@@ -279,11 +280,16 @@ def move_older_rtstructs(patient_id, input_folder, archive_folder):
         shutil.move(f, archive_folder / f.name)
 
 
-def _sort_vois_with_mapping(input_folder,
-                            output_folder,
-                            archive_folder,
-                            voi_mapping,
-                            keep_only_latest_rtstruct=False):
+# def _sort_vois_with_mapping(...
+def sort_vois(input_folder,
+              output_folder,
+              archive_folder,
+              voi_mapping=None,
+              keep_only_latest_rtstruct=False):
+
+    if voi_mapping is None:
+        raise ValueError("voi_mapping must be provided")
+
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     archive_folder = Path(archive_folder)
@@ -415,7 +421,7 @@ def move_gtv_one_patient(input_folder,
 def get_datetime_from_filename(file):
     try:
         output = datetime.strptime(
-        file.name.split("__")[-1].split(".")[0], "%Y-%m-%d_%H-%M-%S")
+            file.name.split("__")[-1].split(".")[0], "%Y-%m-%d_%H-%M-%S")
     except ValueError:
         output = datetime(1600, 1, 1)
 
@@ -462,7 +468,7 @@ def correct_names(input_folder, output_folder, mapping, center="montreal"):
     if "montreal" in center.lower():
         _correct_names_montreal(input_folder, output_folder)
     else:
-        _correct_names(input_folder, output_folder, mapping)
+        correct_names_with_mapping(input_folder, output_folder, mapping)
 
 
 def map_names_hecktor(patient_id, mapping, center="montreal"):
@@ -489,7 +495,7 @@ def _map_names_hecktor_montreal(patient_id):
     return patient_id[3:]
 
 
-def _correct_names(input_folder, output_folder, mapping):
+def correct_names_with_mapping(input_folder, output_folder, mapping):
     input_folder = Path(input_folder)
     mapping_df = pd.read_csv(mapping)
     mapping_df.dicom_id = mapping_df.dicom_id.astype(str)
